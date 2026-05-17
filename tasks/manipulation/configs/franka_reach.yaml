@@ -2,7 +2,15 @@ task:
   name: manipulation/franka_reach
   family: manipulation
   backend: isaaclab_official
+  isaac_task_name: Isaac-Reach-Franka-v0
   official_task_hint: isaaclab_tasks.manager_based.manipulation.reach.config.franka.joint_pos_env_cfg
+
+external:
+  isaaclab_path: external/IsaacLab
+  isaacsim_path: ~/isaacsim
+  isaacsim_symlink: external/IsaacLab/_isaac_sim
+  install_mode: isaac_sim_binary
+  ubuntu_20_04_note: Use Isaac Sim binary installation because Isaac Sim pip packages require newer GLIBC than Ubuntu 20.04 provides.
 
 robot:
   type: franka
@@ -15,8 +23,13 @@ target:
 training:
   algorithm: ppo
   seed: 42
-  max_iterations: 1000
-  num_envs: 1024
+  max_iterations: 20
+  num_envs: 16
+  headless: true
+
+evaluation:
+  num_envs: 16
+  video_length: 200
 
 outputs:
   log_dir: logs/manipulation/franka_reach

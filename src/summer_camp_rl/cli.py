@@ -6,6 +6,7 @@ from pathlib import Path
 from summer_camp_rl.common.config import load_config
 from summer_camp_rl.common.logging import get_logger
 from summer_camp_rl.registry import TASK_REGISTRY, TaskSpec
+from summer_camp_rl.runners import run_task_command
 
 logger = get_logger(__name__)
 
@@ -53,15 +54,7 @@ def run_command(args: argparse.Namespace) -> int:
     logger.info("Config: %s", args.config)
     logger.info("Backend: %s", task.backend)
 
-    if args.dry_run:
-        logger.info("Dry-run passed. Config keys: %s", sorted(cfg.keys()))
-        logger.info("Next step: implement %s runner at %s", args.command, task.runner_hint)
-        return 0
-
-    raise NotImplementedError(
-        "Real simulator/training integration is not implemented yet. "
-        "Use --dry-run first, then connect IsaacLab / SEA-Nav / robot_lab in the task runner."
-    )
+    return run_task_command(args.command, args, cfg, task)
 
 
 def main() -> int:

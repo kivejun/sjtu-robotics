@@ -30,8 +30,8 @@
 
 ```bash
 # 1. 创建 Python 环境，建议 Python 3.10+
-conda create -n summer-camp-embodied-ai python=3.10 -y
-conda activate summer-camp-embodied-ai
+conda create -n sjtu-summer-camp python=3.10 -y
+conda activate sjtu-summer-camp
 
 # 2. 安装本仓库基础依赖
 pip install -e .
@@ -44,6 +44,44 @@ summer-camp train --task manipulation/franka_reach --config tasks/manipulation/c
 summer-camp eval  --task manipulation/franka_reach --config tasks/manipulation/configs/franka_reach.yaml --dry-run
 summer-camp play  --task manipulation/franka_reach --config tasks/manipulation/configs/franka_reach.yaml --dry-run
 ```
+
+### Ubuntu 20.04 上配置 Franka Reach baseline
+
+当前推荐从 `manipulation/franka_reach` 开始。Ubuntu 20.04 默认 GLIBC 较旧，不建议使用 Isaac Sim pip 安装；请使用 Isaac Sim binary，并让 IsaacLab 通过 `_isaac_sim` 软链接找到它。
+
+```bash
+# 1. 将 Isaac Sim binary 解压到 ~/isaacsim
+# 目录中应包含 isaac-sim.sh、python.sh、kit/、exts/ 等文件
+
+# 2. 克隆 IsaacLab
+cd ~/sjtu-robotics
+mkdir -p external
+git clone https://github.com/isaac-sim/IsaacLab.git external/IsaacLab
+cd external/IsaacLab
+git checkout v2.2.1
+
+# 3. 安装依赖和 RSL-RL
+sudo apt install cmake build-essential ffmpeg -y
+./isaaclab.sh --install rsl_rl
+
+# 4. 回到本仓库，检查 Isaac Sim / IsaacLab / Franka 任务
+cd ~/sjtu-robotics
+bash scripts/check_isaaclab_franka_env.sh
+
+# 5. 小规模验证 Franka Reach 训练
+cd external/IsaacLab
+export OMNI_KIT_ACCEPT_EULA=yes
+unset DISPLAY
+unset WAYLAND_DISPLAY
+unset XAUTHORITY
+./isaaclab.sh -p scripts/reinforcement_learning/rsl_rl/train.py \
+  --task Isaac-Reach-Franka-v0 \
+  --headless \
+  --num_envs 16 \
+  --max_iterations 20
+```
+
+在 Ubuntu 20.04 桌面环境中，即使使用 `--headless`，Isaac Sim 4.5 仍可能因为连接到当前 X server 而触发 `xcb` 段错误。运行 headless 训练和环境检查前清理 `DISPLAY`、`WAYLAND_DISPLAY`、`XAUTHORITY` 可以避免这个问题。
 
 也可以使用脚本：
 
