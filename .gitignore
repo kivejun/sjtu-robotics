@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Packaging
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Project outputs
+logs/
+checkpoints/
+outputs/videos/
+outputs/figures/
+outputs/metrics/
+experiments/*/runs/
+
+# Large datasets and assets
+data/
+assets/**/*.usd
+assets/**/*.usda
+assets/**/*.usdc
+assets/**/*.urdf
+assets/**/*.obj
+assets/**/*.stl
+assets/**/*.fbx
+
+# Model artifacts
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.engine
+
+# Media artifacts
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.gif
+
+# Local external repositories
+external/
+third_party/
