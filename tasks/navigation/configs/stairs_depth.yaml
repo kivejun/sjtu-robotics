@@ -1,0 +1,31 @@
+task:
+  name: navigation/stairs_depth
+  family: navigation
+  backend: sea_nav_modified_or_isaaclab
+
+environment:
+  scene: stairs_low_obstacles
+  include_stairs: true
+  include_low_obstacles: true
+  include_narrow_corridors: true
+
+sensor:
+  depth: true
+  depth_image: true
+  point_cloud: false
+  height_map: true
+
+metrics:
+  - success_rate
+  - collision_count
+  - stair_passage_success
+
+training:
+  algorithm: rl_or_learning_based_planner
+  seed: 42
+
+outputs:
+  log_dir: logs/navigation/stairs_depth
+  checkpoint_dir: checkpoints/navigation/stairs_depth
+  video_dir: outputs/videos/navigation/stairs_depth
+  metrics_path: outputs/metrics/navigation_stairs_depth.json

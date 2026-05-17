@@ -1,0 +1,35 @@
+task:
+  name: manipulation/button_press
+  family: manipulation
+  backend: isaaclab_custom
+
+robot:
+  type: franka_or_mobile_manipulator
+  base_fixed: true
+
+button:
+  asset_path: null
+  position_randomization: true
+  orientation_randomization: false
+  trigger_threshold: null
+
+stages:
+  - reach_button_neighborhood
+  - align_with_button_normal
+  - press_along_normal
+  - trigger_button_state
+
+metrics:
+  - end_effector_position_error
+  - button_trigger_success_rate
+  - contact_quality
+
+training:
+  algorithm: ppo_or_rl_plus_controller
+  seed: 42
+
+outputs:
+  log_dir: logs/manipulation/button_press
+  checkpoint_dir: checkpoints/manipulation/button_press
+  video_dir: outputs/videos/manipulation/button_press
+  metrics_path: outputs/metrics/manipulation_button_press.json

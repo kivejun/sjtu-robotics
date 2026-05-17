@@ -1,0 +1,31 @@
+task:
+  name: navigation/sea_nav_baseline
+  family: navigation
+  backend: sea_nav
+
+external_repo:
+  path: null
+  note: Set this to local SEA-Nav repo path after cloning.
+
+environment:
+  scene: baseline
+  goal_randomization: true
+  obstacle_mode: static
+
+robot:
+  type: wheeled_or_legged
+
+sensor:
+  depth: false
+  lidar: true
+
+training:
+  algorithm: official_or_reproduced
+  seed: 42
+  max_steps: null
+
+outputs:
+  log_dir: logs/navigation/sea_nav_baseline
+  checkpoint_dir: checkpoints/navigation/sea_nav_baseline
+  video_dir: outputs/videos/navigation/sea_nav_baseline
+  metrics_path: outputs/metrics/navigation_sea_nav_baseline.json

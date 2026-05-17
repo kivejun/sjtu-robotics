@@ -1,0 +1,25 @@
+task:
+  name: manipulation/franka_reach
+  family: manipulation
+  backend: isaaclab_official
+  official_task_hint: isaaclab_tasks.manager_based.manipulation.reach.config.franka.joint_pos_env_cfg
+
+robot:
+  type: franka
+  control_mode: joint_position
+
+target:
+  randomization: true
+  position_range: null
+
+training:
+  algorithm: ppo
+  seed: 42
+  max_iterations: 1000
+  num_envs: 1024
+
+outputs:
+  log_dir: logs/manipulation/franka_reach
+  checkpoint_dir: checkpoints/manipulation/franka_reach
+  video_dir: outputs/videos/manipulation/franka_reach
+  metrics_path: outputs/metrics/manipulation_franka_reach.json

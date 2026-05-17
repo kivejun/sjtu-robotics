@@ -1,0 +1,27 @@
+task:
+  name: locomotion/quadruped
+  family: locomotion
+  backend: isaaclab_or_robot_lab
+
+robot:
+  type: quadruped
+  asset_path: null
+
+commands:
+  vx: [-1.0, 1.0]
+  vy: [-1.0, 1.0]
+  wz: [-1.0, 1.0]
+
+terrain:
+  type: isaaclab_generated_rough_terrain
+  curriculum: true
+
+training:
+  algorithm: ppo
+  seed: 42
+  max_iterations: 2000
+
+outputs:
+  log_dir: logs/locomotion/quadruped
+  checkpoint_dir: checkpoints/locomotion/quadruped
+  video_dir: outputs/videos/locomotion/quadruped

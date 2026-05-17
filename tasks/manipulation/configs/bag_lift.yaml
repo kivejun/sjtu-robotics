@@ -1,0 +1,34 @@
+task:
+  name: manipulation/bag_lift
+  family: manipulation
+  backend: isaaclab_custom
+
+robot:
+  type: franka_or_mobile_manipulator
+  base_fixed: true
+
+bag:
+  model_type: rigid_basket_or_articulated_handle
+  asset_path: null
+  pose_randomization: false
+  mass_randomization: false
+
+stages:
+  - reach_handle
+  - grasp_handle
+  - lift_and_hold
+
+metrics:
+  - lift_height
+  - hold_time
+  - success_rate
+
+training:
+  algorithm: ppo_or_rl_plus_controller
+  seed: 42
+
+outputs:
+  log_dir: logs/manipulation/bag_lift
+  checkpoint_dir: checkpoints/manipulation/bag_lift
+  video_dir: outputs/videos/manipulation/bag_lift
+  metrics_path: outputs/metrics/manipulation_bag_lift.json

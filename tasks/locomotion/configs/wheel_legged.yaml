@@ -1,0 +1,27 @@
+task:
+  name: locomotion/wheel_legged
+  family: locomotion
+  backend: isaaclab_or_robot_lab
+
+robot:
+  type: wheel_legged
+  asset_path: null
+
+commands:
+  vx: [-1.5, 1.5]
+  vy: [-1.5, 1.5]
+  wz: [-1.5, 1.5]
+
+terrain:
+  type: isaaclab_generated_rough_terrain
+  curriculum: true
+
+training:
+  algorithm: ppo
+  seed: 42
+  max_iterations: 2000
+
+outputs:
+  log_dir: logs/locomotion/wheel_legged
+  checkpoint_dir: checkpoints/locomotion/wheel_legged
+  video_dir: outputs/videos/locomotion/wheel_legged

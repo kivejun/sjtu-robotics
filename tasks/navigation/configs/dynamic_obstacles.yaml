@@ -1,0 +1,29 @@
+task:
+  name: navigation/dynamic_obstacles
+  family: navigation
+  backend: sea_nav_modified_or_isaaclab
+
+environment:
+  scene: dynamic_obstacles
+  num_dynamic_obstacles: 3
+  obstacle_motion_modes:
+    - pedestrian_like
+    - back_and_forth
+    - random_rigid_body
+  goal_randomization: true
+
+metrics:
+  - success_rate
+  - collision_count
+  - path_length
+  - time_to_goal
+
+training:
+  algorithm: rl_or_hybrid_planner
+  seed: 42
+
+outputs:
+  log_dir: logs/navigation/dynamic_obstacles
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles
+  video_dir: outputs/videos/navigation/dynamic_obstacles
+  metrics_path: outputs/metrics/navigation_dynamic_obstacles.json

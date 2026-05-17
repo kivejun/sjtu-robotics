@@ -1,0 +1,26 @@
+task:
+  name: locomotion/humanoid_flat
+  family: locomotion
+  backend: isaaclab_or_robot_lab
+
+robot:
+  type: humanoid
+  asset_path: null
+
+commands:
+  vx: [-1.0, 1.0]
+  vy: [-1.0, 1.0]
+  wz: [-1.0, 1.0]
+
+terrain:
+  type: flat
+
+training:
+  algorithm: ppo
+  seed: 42
+  max_iterations: 1000
+
+outputs:
+  log_dir: logs/locomotion/humanoid_flat
+  checkpoint_dir: checkpoints/locomotion/humanoid_flat
+  video_dir: outputs/videos/locomotion/humanoid_flat
