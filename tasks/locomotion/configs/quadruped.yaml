@@ -1,27 +1,45 @@
 task:
   name: locomotion/quadruped
   family: locomotion
-  backend: isaaclab_or_robot_lab
+  backend: robot_lab
+
+external:
+  robot_lab_path: external/robot_lab
+  isaaclab_path: external/IsaacLab
+
+runtime:
+  conda_env: sjtu-summer-camp
 
 robot:
-  type: quadruped
-  asset_path: null
+  category: quadruped
+  model: Unitree Go2
 
-commands:
-  vx: [-1.0, 1.0]
-  vy: [-1.0, 1.0]
-  wz: [-1.0, 1.0]
+robot_lab:
+  task_name: RobotLab-Isaac-Velocity-Rough-Unitree-Go2-v0
+  experiment_name: unitree_go2_rough
 
 terrain:
-  type: isaaclab_generated_rough_terrain
+  type: rough
   curriculum: true
 
 training:
   algorithm: ppo
   seed: 42
-  max_iterations: 2000
+  num_envs: 512
+  max_iterations: 3000
+  headless: true
+
+evaluation:
+  num_envs: 8
+  headless: false
+
+recording:
+  num_envs: 1
+  headless: true
+  video_length: 1200
 
 outputs:
   log_dir: logs/locomotion/quadruped
   checkpoint_dir: checkpoints/locomotion/quadruped
   video_dir: outputs/videos/locomotion/quadruped
+  metrics_path: outputs/metrics/locomotion_quadruped.json

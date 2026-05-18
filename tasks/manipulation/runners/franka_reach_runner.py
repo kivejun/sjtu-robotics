@@ -48,9 +48,8 @@ def _base_command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) 
 
     isaac_task_name = str(task_cfg.get("isaac_task_name", "Isaac-Reach-Franka-v0"))
     isaac_play_task_name = str(task_cfg.get("isaac_play_task_name", isaac_task_name))
-    headless = bool(training_cfg.get("headless", True))
-
     if command == "train":
+        headless = bool(training_cfg.get("headless", True))
         script = "scripts/reinforcement_learning/rsl_rl/train.py"
         num_envs = int(training_cfg.get("num_envs", 16))
         cmd = [
@@ -80,8 +79,13 @@ def _base_command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) 
         playback_task_name = isaac_play_task_name
         if command == "record":
             num_envs = int(recording_cfg.get("num_envs", evaluation_cfg.get("num_envs", 1)))
+            headless = bool(recording_cfg.get("headless", True))
+        elif command == "eval":
+            num_envs = int(evaluation_cfg.get("num_envs", training_cfg.get("num_envs", 16)))
+            headless = bool(evaluation_cfg.get("headless", True))
         else:
             num_envs = int(evaluation_cfg.get("num_envs", training_cfg.get("num_envs", 16)))
+            headless = bool(evaluation_cfg.get("headless", False))
         cmd = [
             str(isaaclab_sh),
             "-p",
@@ -105,6 +109,13 @@ def _base_command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) 
     if headless:
         cmd.append("--headless")
     return cmd
+
+
+def _preserve_display(cfg: Mapping[str, Any], command: str) -> bool:
+    if command != "play":
+        return False
+    evaluation_cfg = _section(cfg, "evaluation")
+    return not bool(evaluation_cfg.get("headless", False))
 
 
 def _env(*, preserve_display: bool) -> dict[str, str]:
@@ -174,7 +185,7 @@ def run(
         print("Dry-run only; simulator/training was not launched.")
         return 0
 
-    env = _env(preserve_display=False)
+    env = _env(preserve_display=_preserve_display(cfg, command))
     env = _with_isaacsim_env(env, isaaclab_path)
     completed = subprocess.run(cmd, cwd=isaaclab_path, env=env, check=False)
     return completed.returncode

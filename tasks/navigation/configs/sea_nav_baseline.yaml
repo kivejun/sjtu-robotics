@@ -27,8 +27,8 @@ training:
   experiment_name: Go2_pos_rough
   algorithm: ppo
   seed: 42
-  max_iterations: 2000
-  num_envs: 2048
+  max_iterations: 4000
+  num_envs: 1024
   headless: true
 
 evaluation:
@@ -39,8 +39,8 @@ evaluation:
 recording:
   num_envs: 1
   headless: true
-  video_length: 2000
-  total_episodes: 3
+  video_length: 3000
+  total_episodes: 5
 
 outputs:
   log_dir: logs/navigation/sea_nav_baseline

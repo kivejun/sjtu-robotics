@@ -1,5 +1,5 @@
 task:
-  name: locomotion/wheel_legged
+  name: locomotion/humanoid
   family: locomotion
   backend: robot_lab
 
@@ -11,12 +11,12 @@ runtime:
   conda_env: sjtu-summer-camp
 
 robot:
-  category: wheel_legged
-  model: Unitree Go2W
+  category: humanoid
+  model: Unitree G1
 
 robot_lab:
-  task_name: RobotLab-Isaac-Velocity-Rough-Unitree-Go2W-v0
-  experiment_name: unitree_go2w_rough
+  task_name: RobotLab-Isaac-Velocity-Rough-Unitree-G1-v0
+  experiment_name: unitree_g1_rough
 
 terrain:
   type: rough
@@ -25,12 +25,12 @@ terrain:
 training:
   algorithm: ppo
   seed: 42
-  num_envs: 512
+  num_envs: 256
   max_iterations: 3000
   headless: true
 
 evaluation:
-  num_envs: 8
+  num_envs: 4
   headless: false
 
 recording:
@@ -39,7 +39,7 @@ recording:
   video_length: 1200
 
 outputs:
-  log_dir: logs/locomotion/wheel_legged
-  checkpoint_dir: checkpoints/locomotion/wheel_legged
-  video_dir: outputs/videos/locomotion/wheel_legged
-  metrics_path: outputs/metrics/locomotion_wheel_legged.json
+  log_dir: logs/locomotion/humanoid
+  checkpoint_dir: checkpoints/locomotion/humanoid
+  video_dir: outputs/videos/locomotion/humanoid
+  metrics_path: outputs/metrics/locomotion_humanoid.json
