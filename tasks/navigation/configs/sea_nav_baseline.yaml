@@ -4,8 +4,11 @@ task:
   backend: sea_nav
 
 external_repo:
-  path: null
-  note: Set this to local SEA-Nav repo path after cloning.
+  path: external/SEA-Nav-Code
+  note: Official SEA-Nav-Code repository cloned under external/.
+
+runtime:
+  conda_env: sea_nav
 
 environment:
   scene: baseline
@@ -20,9 +23,24 @@ sensor:
   lidar: true
 
 training:
-  algorithm: official_or_reproduced
+  task_name: go2_pos_rough
+  experiment_name: Go2_pos_rough
+  algorithm: ppo
   seed: 42
-  max_steps: null
+  max_iterations: 2000
+  num_envs: 2048
+  headless: true
+
+evaluation:
+  num_envs: 1
+  headless: false
+  total_episodes: 10
+
+recording:
+  num_envs: 1
+  headless: true
+  video_length: 2000
+  total_episodes: 3
 
 outputs:
   log_dir: logs/navigation/sea_nav_baseline
