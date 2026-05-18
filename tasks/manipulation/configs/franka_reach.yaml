@@ -23,13 +23,18 @@ target:
 training:
   algorithm: ppo
   seed: 42
-  max_iterations: 20
-  num_envs: 16
+  max_iterations: 32000
+  num_envs: 128
   headless: true
 
 evaluation:
   num_envs: 16
-  video_length: 200
+  video_length: 600
+
+recording:
+  num_envs: 1
+  video_length: 1200
+  rendering_mode: performance
 
 outputs:
   log_dir: logs/manipulation/franka_reach
