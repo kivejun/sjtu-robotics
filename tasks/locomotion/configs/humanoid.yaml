@@ -26,7 +26,7 @@ training:
   algorithm: ppo
   seed: 42
   num_envs: 256
-  max_iterations: 3000
+  max_iterations: 8000
   headless: true
 
 evaluation:

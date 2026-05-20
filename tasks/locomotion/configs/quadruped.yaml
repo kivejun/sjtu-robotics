@@ -25,8 +25,8 @@ terrain:
 training:
   algorithm: ppo
   seed: 42
-  num_envs: 512
-  max_iterations: 3000
+  num_envs: 1024
+  max_iterations: 2000
   headless: true
 
 evaluation:
