@@ -104,13 +104,14 @@ def _command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) -> tu
             cmd.extend(["--resume", "--load_run", load_run, "--checkpoint", checkpoint_number])
     elif command in {"eval", "play", "record"}:
         cfg_for_mode = recording_cfg if command == "record" else evaluation_cfg
+        mode_experiment_name = str(cfg_for_mode.get("experiment_name", experiment_name))
         cmd = _python_command(cfg, play_script)
         cmd.extend(
             [
                 "--task",
                 task_name,
                 "--experiment_name",
-                experiment_name,
+                mode_experiment_name,
                 "--num_envs",
                 str(int(cfg_for_mode.get("num_envs", 1))),
             ]
@@ -142,7 +143,7 @@ def _copy_recorded_video(cfg: Mapping[str, Any], checkpoint: str | None) -> Path
     training_cfg = _section(cfg, "training")
     outputs_cfg = _section(cfg, "outputs")
     recording_cfg = _section(cfg, "recording")
-    experiment_name = str(training_cfg.get("experiment_name", "Go2_pos_rough"))
+    experiment_name = str(recording_cfg.get("experiment_name", training_cfg.get("experiment_name", "Go2_pos_rough")))
     load_run, checkpoint_number = _checkpoint_to_load_args(checkpoint)
     if not load_run or not checkpoint_number:
         return None

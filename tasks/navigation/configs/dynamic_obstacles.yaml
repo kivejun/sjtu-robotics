@@ -3,6 +3,13 @@ task:
   family: navigation
   backend: sea_nav_modified_or_isaaclab
 
+external_repo:
+  path: external/SEA-Nav-Code
+  note: SEA-Nav baseline with analytical dynamic obstacles.
+
+runtime:
+  conda_env: sea_nav
+
 environment:
   scene: dynamic_obstacles
   num_dynamic_obstacles: 3
@@ -11,19 +18,41 @@ environment:
     - back_and_forth
     - random_rigid_body
   goal_randomization: true
+  obstacle_radius: 0.35
+  obstacle_speed: 0.45
 
 metrics:
   - success_rate
   - collision_count
   - path_length
   - time_to_goal
+  - min_dynamic_obstacle_distance
 
 training:
-  algorithm: rl_or_hybrid_planner
+  task_name: go2_dynamic_obstacles
+  experiment_name: Go2_dynamic_obstacles
+  algorithm: ppo
   seed: 42
+  max_iterations: 20
+  num_envs: 16
+  headless: true
+
+evaluation:
+  experiment_name: Go2_pos_rough
+  num_envs: 1
+  headless: false
+  total_episodes: 3
+
+recording:
+  experiment_name: Go2_pos_rough
+  num_envs: 1
+  headless: true
+  video_length: 1200
+  total_episodes: 3
 
 outputs:
   log_dir: logs/navigation/dynamic_obstacles
   checkpoint_dir: checkpoints/navigation/dynamic_obstacles
   video_dir: outputs/videos/navigation/dynamic_obstacles
   metrics_path: outputs/metrics/navigation_dynamic_obstacles.json
+  preview_path: outputs/figures/navigation/dynamic_obstacles_preview.png
