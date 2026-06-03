@@ -1,0 +1,61 @@
+task:
+  name: navigation/dynamic_obstacles
+  family: navigation
+  backend: sea_nav_modified_or_isaaclab
+
+external_repo:
+  path: external/SEA-Nav-Code
+  note: SEA-Nav dynamic obstacle curriculum stage 1.
+
+runtime:
+  conda_env: sea_nav
+
+environment:
+  scene: dynamic_obstacles_stage1
+  goal_randomization: true
+  num_dynamic_obstacles: 1
+  obstacle_motion_modes:
+    - pedestrian_like
+  obstacle_radius: 0.35
+  obstacle_speed: 0.25
+  obstacle_collision_distance: 0.50
+  obstacle_amplitude_scale: 0.45
+  obstacle_amplitude_min: 0.30
+  obstacle_amplitude_max: 0.90
+  include_dynamic_obstacle_state: false
+  dynamic_obstacle_state_k: 3
+  ttc_horizon: 3.0
+  path_block_distance: 2.5
+  path_block_width: 0.75
+  path_block_ttc: 2.5
+  preferred_speed: 0.50
+  wait_speed: 0.08
+
+training:
+  task_name: go2_dynamic_obstacles
+  experiment_name: Go2_dynamic_obstacles
+  algorithm: ppo
+  seed: 42
+  max_iterations: 2000
+  num_envs: 768
+  headless: true
+  reset_optimizer: true
+
+evaluation:
+  experiment_name: Go2_dynamic_obstacles
+  num_envs: 1
+  headless: false
+  total_episodes: 3
+
+recording:
+  experiment_name: Go2_dynamic_obstacles
+  num_envs: 1
+  headless: true
+  video_length: 1200
+  total_episodes: 3
+
+outputs:
+  log_dir: logs/navigation/dynamic_obstacles_stage1
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_stage1
+  video_dir: outputs/videos/navigation/dynamic_obstacles_stage1
+  metrics_path: outputs/metrics/navigation_dynamic_obstacles_stage1.json

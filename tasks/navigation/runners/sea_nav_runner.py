@@ -52,6 +52,39 @@ def _checkpoint_to_load_args(checkpoint: str | None) -> tuple[str | None, str | 
     return checkpoint_path.parent.name, match.group(1)
 
 
+def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> None:
+    environment_cfg = _section(cfg, "environment")
+    mapping = {
+        "use_legacy_dynamic_reward": "SEA_NAV_DYNAMIC_LEGACY_REWARD",
+        "num_dynamic_obstacles": "SEA_NAV_DYNAMIC_NUM_OBSTACLES",
+        "obstacle_radius": "SEA_NAV_DYNAMIC_OBSTACLE_RADIUS",
+        "obstacle_speed": "SEA_NAV_DYNAMIC_OBSTACLE_SPEED",
+        "obstacle_collision_distance": "SEA_NAV_DYNAMIC_COLLISION_DISTANCE",
+        "obstacle_amplitude_scale": "SEA_NAV_DYNAMIC_AMPLITUDE_SCALE",
+        "obstacle_amplitude_min": "SEA_NAV_DYNAMIC_AMPLITUDE_MIN",
+        "obstacle_amplitude_max": "SEA_NAV_DYNAMIC_AMPLITUDE_MAX",
+        "dynamic_obstacle_state_k": "SEA_NAV_DYNAMIC_OBS_K",
+        "ttc_horizon": "SEA_NAV_DYNAMIC_TTC_HORIZON",
+        "path_block_distance": "SEA_NAV_DYNAMIC_PATH_BLOCK_DISTANCE",
+        "path_block_width": "SEA_NAV_DYNAMIC_PATH_BLOCK_WIDTH",
+        "path_block_ttc": "SEA_NAV_DYNAMIC_PATH_BLOCK_TTC",
+        "preferred_speed": "SEA_NAV_DYNAMIC_PREFERRED_SPEED",
+        "wait_speed": "SEA_NAV_DYNAMIC_WAIT_SPEED",
+    }
+    for cfg_key, env_key in mapping.items():
+        if cfg_key in environment_cfg:
+            env[env_key] = str(environment_cfg[cfg_key])
+
+    if "include_dynamic_obstacle_state" in environment_cfg:
+        env["SEA_NAV_DYNAMIC_OBS_STATE"] = "1" if _bool(environment_cfg["include_dynamic_obstacle_state"]) else "0"
+
+    motion_modes = environment_cfg.get("obstacle_motion_modes")
+    if motion_modes is not None:
+        if not isinstance(motion_modes, list):
+            raise TypeError("environment.obstacle_motion_modes must be a list")
+        env["SEA_NAV_DYNAMIC_MOTION_MODES"] = ",".join(str(mode) for mode in motion_modes)
+
+
 def _base_paths(cfg: Mapping[str, Any]) -> tuple[Path, Path, Path]:
     external_cfg = _section(cfg, "external_repo")
     sea_nav_path = _expand_path(str(external_cfg.get("path", "external/SEA-Nav-Code")))
@@ -65,7 +98,7 @@ def _base_paths(cfg: Mapping[str, Any]) -> tuple[Path, Path, Path]:
 def _python_command(cfg: Mapping[str, Any], script: Path) -> list[str]:
     runtime_cfg = _section(cfg, "runtime")
     conda_env = str(runtime_cfg.get("conda_env", "sea_nav"))
-    return ["conda", "run", "-n", conda_env, "python", str(script)]
+    return ["conda", "run", "--no-capture-output", "-n", conda_env, "python", str(script)]
 
 
 def _command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) -> tuple[list[str], Path, dict[str, str]]:
@@ -77,11 +110,17 @@ def _command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) -> tu
     task_name = str(training_cfg.get("task_name", "go2_pos_rough"))
     experiment_name = str(training_cfg.get("experiment_name", "Go2_pos_rough"))
     env = os.environ.copy()
-    env.setdefault("WANDB_MODE", "offline")
-    env.setdefault("WANDB_DISABLED", "true")
-    env.pop("SEA_NAV_ENABLE_WANDB", None)
+    wandb_enabled = env.get("SEA_NAV_ENABLE_WANDB") == "1"
+    if wandb_enabled:
+        env.pop("WANDB_DISABLED", None)
+        if env.get("WANDB_MODE", "").lower() == "offline":
+            env.pop("WANDB_MODE", None)
+    else:
+        env.setdefault("WANDB_MODE", "offline")
+        env.setdefault("WANDB_DISABLED", "true")
 
     if command == "train":
+        _apply_dynamic_obstacle_env(cfg, env)
         cmd = _python_command(cfg, train_script)
         cmd.extend(
             [
@@ -99,10 +138,13 @@ def _command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) -> tu
         )
         if _bool(training_cfg.get("headless"), True):
             cmd.append("--headless")
+        if _bool(training_cfg.get("reset_optimizer"), False):
+            env["SEA_NAV_RESET_OPTIMIZER"] = "1"
         load_run, checkpoint_number = _checkpoint_to_load_args(checkpoint)
         if load_run and checkpoint_number:
             cmd.extend(["--resume", "--load_run", load_run, "--checkpoint", checkpoint_number])
     elif command in {"eval", "play", "record"}:
+        _apply_dynamic_obstacle_env(cfg, env)
         cfg_for_mode = recording_cfg if command == "record" else evaluation_cfg
         mode_experiment_name = str(cfg_for_mode.get("experiment_name", experiment_name))
         cmd = _python_command(cfg, play_script)

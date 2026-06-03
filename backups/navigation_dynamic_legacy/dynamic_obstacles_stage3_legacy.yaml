@@ -1,0 +1,58 @@
+task:
+  name: navigation/dynamic_obstacles
+  family: navigation
+  backend: sea_nav_modified_or_isaaclab
+
+external_repo:
+  path: external/SEA-Nav-Code
+  note: SEA-Nav dynamic obstacle curriculum stage 3 with legacy reward logic.
+
+runtime:
+  conda_env: sea_nav
+
+environment:
+  scene: dynamic_obstacles_stage3_legacy
+  goal_randomization: true
+  use_legacy_dynamic_reward: true
+  include_dynamic_obstacle_state: false
+  num_dynamic_obstacles: 3
+  obstacle_motion_modes:
+    - pedestrian_like
+    - back_and_forth
+    - random_rigid_body
+  obstacle_radius: 0.35
+  obstacle_speed: 0.45
+  obstacle_collision_distance: 0.55
+  obstacle_amplitude_scale: 0.55
+  obstacle_amplitude_min: 0.35
+  obstacle_amplitude_max: 1.35
+
+training:
+  task_name: go2_dynamic_obstacles
+  experiment_name: Go2_dynamic_obstacles
+  algorithm: ppo
+  seed: 42
+  max_iterations: 5200
+  num_envs: 768
+  headless: true
+  reset_optimizer: false
+
+evaluation:
+  experiment_name: Go2_dynamic_obstacles
+  num_envs: 1
+  headless: false
+  total_episodes: 3
+
+recording:
+  experiment_name: Go2_dynamic_obstacles
+  num_envs: 1
+  headless: true
+  video_length: 1800
+  total_episodes: 3
+
+outputs:
+  log_dir: logs/navigation/dynamic_obstacles_stage3_legacy
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_stage3_legacy
+  video_dir: outputs/videos/navigation/dynamic_obstacles_stage3_legacy
+  metrics_path: outputs/metrics/navigation_dynamic_obstacles_stage3_legacy.json
+
