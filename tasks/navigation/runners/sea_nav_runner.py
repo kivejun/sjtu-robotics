@@ -55,6 +55,7 @@ def _checkpoint_to_load_args(checkpoint: str | None) -> tuple[str | None, str | 
 def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> None:
     environment_cfg = _section(cfg, "environment")
     mapping = {
+        "enable_dynamic_obstacles": "SEA_NAV_DYNAMIC_ENABLE",
         "use_legacy_dynamic_reward": "SEA_NAV_DYNAMIC_LEGACY_REWARD",
         "num_dynamic_obstacles": "SEA_NAV_DYNAMIC_NUM_OBSTACLES",
         "obstacle_radius": "SEA_NAV_DYNAMIC_OBSTACLE_RADIUS",
@@ -68,8 +69,13 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "path_block_distance": "SEA_NAV_DYNAMIC_PATH_BLOCK_DISTANCE",
         "path_block_width": "SEA_NAV_DYNAMIC_PATH_BLOCK_WIDTH",
         "path_block_ttc": "SEA_NAV_DYNAMIC_PATH_BLOCK_TTC",
+        "path_block_rise": "SEA_NAV_DYNAMIC_PATH_BLOCK_RISE",
+        "path_block_fall": "SEA_NAV_DYNAMIC_PATH_BLOCK_FALL",
+        "path_block_threshold": "SEA_NAV_DYNAMIC_PATH_BLOCK_THRESHOLD",
         "preferred_speed": "SEA_NAV_DYNAMIC_PREFERRED_SPEED",
         "wait_speed": "SEA_NAV_DYNAMIC_WAIT_SPEED",
+        "ttc_safe_distance": "SEA_NAV_DYNAMIC_TTC_SAFE_DISTANCE",
+        "blocked_timeout": "SEA_NAV_DYNAMIC_BLOCKED_TIMEOUT",
     }
     for cfg_key, env_key in mapping.items():
         if cfg_key in environment_cfg:
@@ -83,6 +89,84 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         if not isinstance(motion_modes, list):
             raise TypeError("environment.obstacle_motion_modes must be a list")
         env["SEA_NAV_DYNAMIC_MOTION_MODES"] = ",".join(str(mode) for mode in motion_modes)
+
+    reward_cfg = _section(cfg, "reward")
+    reward_mapping = {
+        "progress": "SEA_NAV_REWARD_PROGRESS",
+        "preferred_velocity": "SEA_NAV_REWARD_PREFERRED_VELOCITY",
+        "dynamic_ttc": "SEA_NAV_REWARD_DYNAMIC_TTC",
+        "dynamic_clearance": "SEA_NAV_REWARD_DYNAMIC_CLEARANCE",
+        "wait": "SEA_NAV_REWARD_WAIT",
+        "blocked_fast_penalty": "SEA_NAV_REWARD_BLOCKED_FAST_PENALTY",
+        "detour": "SEA_NAV_REWARD_DETOUR",
+        "near_goal_stop": "SEA_NAV_REWARD_NEAR_GOAL_STOP",
+        "dynamic_collision": "SEA_NAV_REWARD_DYNAMIC_COLLISION",
+        "progress_blocked_scale": "SEA_NAV_REWARD_PROGRESS_BLOCKED_SCALE",
+        "progress_near_goal_scale": "SEA_NAV_REWARD_PROGRESS_NEAR_GOAL_SCALE",
+        "preferred_sigma": "SEA_NAV_REWARD_PREFERRED_SIGMA",
+        "ttc_min_closing_speed": "SEA_NAV_REWARD_TTC_MIN_CLOSING_SPEED",
+        "clearance_safe_distance": "SEA_NAV_REWARD_CLEARANCE_SAFE_DISTANCE",
+        "clearance_front_margin": "SEA_NAV_REWARD_CLEARANCE_FRONT_MARGIN",
+        "wait_max_speed": "SEA_NAV_REWARD_WAIT_MAX_SPEED",
+        "wait_heading_weight": "SEA_NAV_REWARD_WAIT_HEADING_WEIGHT",
+        "wait_timeout_decay": "SEA_NAV_REWARD_WAIT_TIMEOUT_DECAY",
+        "blocked_fast_speed_threshold": "SEA_NAV_REWARD_BLOCKED_FAST_SPEED_THRESHOLD",
+        "blocked_fast_ttc_threshold": "SEA_NAV_REWARD_BLOCKED_FAST_TTC_THRESHOLD",
+        "blocked_fast_closing_speed_threshold": "SEA_NAV_REWARD_BLOCKED_FAST_CLOSING_SPEED_THRESHOLD",
+        "detour_lateral_weight": "SEA_NAV_REWARD_DETOUR_LATERAL_WEIGHT",
+        "detour_yaw_weight": "SEA_NAV_REWARD_DETOUR_YAW_WEIGHT",
+        "detour_blocked_scale": "SEA_NAV_REWARD_DETOUR_BLOCKED_SCALE",
+        "detour_timeout_scale": "SEA_NAV_REWARD_DETOUR_TIMEOUT_SCALE",
+        "near_goal_distance": "SEA_NAV_REWARD_NEAR_GOAL_DISTANCE",
+        "near_goal_speed": "SEA_NAV_REWARD_NEAR_GOAL_SPEED",
+        "near_goal_max_speed": "SEA_NAV_REWARD_NEAR_GOAL_MAX_SPEED",
+        "near_goal_max_yaw_rate": "SEA_NAV_REWARD_NEAR_GOAL_MAX_YAW_RATE",
+    }
+    for cfg_key, env_key in reward_mapping.items():
+        if cfg_key in reward_cfg:
+            env[env_key] = str(reward_cfg[cfg_key])
+
+    pipeline_cfg = _section(cfg, "pipeline")
+    pipeline_mapping = {
+        "controller": "SEA_NAV_PLAY_CONTROLLER",
+        "preferred_speed": "SEA_NAV_DWA_PREFERRED_SPEED",
+        "wait_speed": "SEA_NAV_DWA_WAIT_SPEED",
+        "max_lateral_speed": "SEA_NAV_DWA_MAX_LATERAL_SPEED",
+        "max_yaw_rate": "SEA_NAV_DWA_MAX_YAW_RATE",
+        "ttc_horizon": "SEA_NAV_DWA_TTC_HORIZON",
+        "safe_distance": "SEA_NAV_DWA_SAFE_DISTANCE",
+        "static_clearance": "SEA_NAV_DWA_STATIC_CLEARANCE",
+        "static_inflation": "SEA_NAV_DWA_STATIC_INFLATION",
+        "obstacle_height": "SEA_NAV_DWA_OBSTACLE_HEIGHT",
+        "waypoint_lookahead": "SEA_NAV_DWA_WAYPOINT_LOOKAHEAD",
+        "astar_replan_period": "SEA_NAV_DWA_ASTAR_REPLAN_PERIOD",
+        "control_period": "SEA_NAV_DWA_CONTROL_PERIOD",
+        "goal_weight": "SEA_NAV_DWA_GOAL_WEIGHT",
+        "velocity_weight": "SEA_NAV_DWA_VELOCITY_WEIGHT",
+        "ttc_weight": "SEA_NAV_DWA_TTC_WEIGHT",
+        "clearance_weight": "SEA_NAV_DWA_CLEARANCE_WEIGHT",
+        "yaw_weight": "SEA_NAV_DWA_YAW_WEIGHT",
+        "smoothness_weight": "SEA_NAV_DWA_SMOOTHNESS_WEIGHT",
+        "wait_bonus": "SEA_NAV_DWA_WAIT_BONUS",
+        "hybrid_safe_distance": "SEA_NAV_HYBRID_SAFE_DISTANCE",
+        "hybrid_critical_distance": "SEA_NAV_HYBRID_CRITICAL_DISTANCE",
+        "hybrid_ttc_horizon": "SEA_NAV_HYBRID_TTC_HORIZON",
+        "hybrid_stop_ttc": "SEA_NAV_HYBRID_STOP_TTC",
+        "hybrid_slow_ttc": "SEA_NAV_HYBRID_SLOW_TTC",
+        "hybrid_front_ray_clearance": "SEA_NAV_HYBRID_FRONT_RAY_CLEARANCE",
+        "hybrid_max_lateral_speed": "SEA_NAV_HYBRID_MAX_LATERAL_SPEED",
+        "hybrid_escape_yaw_rate": "SEA_NAV_HYBRID_ESCAPE_YAW_RATE",
+        "hybrid_policy_weight": "SEA_NAV_HYBRID_POLICY_WEIGHT",
+        "hybrid_progress_weight": "SEA_NAV_HYBRID_PROGRESS_WEIGHT",
+        "hybrid_ttc_weight": "SEA_NAV_HYBRID_TTC_WEIGHT",
+        "hybrid_clearance_weight": "SEA_NAV_HYBRID_CLEARANCE_WEIGHT",
+        "hybrid_static_weight": "SEA_NAV_HYBRID_STATIC_WEIGHT",
+        "hybrid_wait_bonus": "SEA_NAV_HYBRID_WAIT_BONUS",
+        "hybrid_smoothness_weight": "SEA_NAV_HYBRID_SMOOTHNESS_WEIGHT",
+    }
+    for cfg_key, env_key in pipeline_mapping.items():
+        if cfg_key in pipeline_cfg:
+            env[env_key] = str(pipeline_cfg[cfg_key])
 
 
 def _base_paths(cfg: Mapping[str, Any]) -> tuple[Path, Path, Path]:
@@ -179,16 +263,23 @@ def _command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) -> tu
 
 
 def _copy_recorded_video(cfg: Mapping[str, Any], checkpoint: str | None) -> Path | None:
-    if not checkpoint:
-        return None
     sea_nav_path, _, _ = _base_paths(cfg)
     training_cfg = _section(cfg, "training")
     outputs_cfg = _section(cfg, "outputs")
     recording_cfg = _section(cfg, "recording")
     experiment_name = str(recording_cfg.get("experiment_name", training_cfg.get("experiment_name", "Go2_pos_rough")))
-    load_run, checkpoint_number = _checkpoint_to_load_args(checkpoint)
-    if not load_run or not checkpoint_number:
-        return None
+    if checkpoint:
+        load_run, checkpoint_number = _checkpoint_to_load_args(checkpoint)
+        if not load_run or not checkpoint_number:
+            return None
+        video_stem = f"{load_run}_{checkpoint_number}"
+        dest_name = f"sea_nav_demo_model_{checkpoint_number}_{int(recording_cfg.get('video_length', 2000))}steps.mp4"
+    else:
+        pipeline_cfg = _section(cfg, "pipeline")
+        if not pipeline_cfg:
+            return None
+        video_stem = "dwa_pipeline_n1"
+        dest_name = f"sea_nav_demo_pipeline_{int(recording_cfg.get('video_length', 2000))}steps.mp4"
     source = (
         sea_nav_path
         / "training"
@@ -196,13 +287,13 @@ def _copy_recorded_video(cfg: Mapping[str, Any], checkpoint: str | None) -> Path
         / "logs"
         / experiment_name
         / "exported"
-        / f"{load_run}_{checkpoint_number}.mp4"
+        / f"{video_stem}.mp4"
     )
     if not source.exists():
         return None
     video_dir = _expand_path(str(outputs_cfg.get("video_dir", "outputs/videos/navigation/sea_nav_baseline")))
     video_dir.mkdir(parents=True, exist_ok=True)
-    dest = video_dir / f"sea_nav_demo_model_{checkpoint_number}_{int(recording_cfg.get('video_length', 2000))}steps.mp4"
+    dest = video_dir / dest_name
     shutil.copy2(source, dest)
     return dest
 

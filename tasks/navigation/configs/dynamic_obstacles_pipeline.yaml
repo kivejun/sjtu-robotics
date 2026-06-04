@@ -1,0 +1,90 @@
+task:
+  name: navigation/dynamic_obstacles
+  family: navigation
+  backend: sea_nav_modified_or_isaaclab
+
+external_repo:
+  path: external/SEA-Nav-Code
+  note: N1 dynamic-obstacle navigation with a DWA/VO-style classical pipeline controller.
+
+runtime:
+  conda_env: sea_nav
+
+environment:
+  scene: dynamic_obstacles_pipeline
+  goal_randomization: true
+  enable_dynamic_obstacles: true
+  num_dynamic_obstacles: 3
+  obstacle_motion_modes:
+    - pedestrian_like
+    - back_and_forth
+    - random_rigid_body
+  obstacle_radius: 0.35
+  obstacle_speed: 0.45
+  obstacle_collision_distance: 0.60
+  obstacle_amplitude_scale: 0.55
+  obstacle_amplitude_min: 0.35
+  obstacle_amplitude_max: 1.35
+  include_dynamic_obstacle_state: false
+  dynamic_obstacle_state_k: 3
+  ttc_horizon: 3.0
+  path_block_distance: 3.0
+  path_block_width: 0.95
+  path_block_ttc: 3.0
+  path_block_rise: 0.25
+  path_block_fall: 0.05
+  path_block_threshold: 0.40
+  preferred_speed: 0.50
+  wait_speed: 0.00
+  ttc_safe_distance: 0.60
+  blocked_timeout: 3.0
+
+pipeline:
+  controller: dwa_pipeline
+  preferred_speed: 0.50
+  wait_speed: 0.00
+  max_lateral_speed: 0.45
+  max_yaw_rate: 0.85
+  ttc_horizon: 3.0
+  safe_distance: 0.75
+  static_clearance: 0.65
+  static_inflation: 0.35
+  obstacle_height: 0.12
+  waypoint_lookahead: 1.0
+  astar_replan_period: 2.0
+  control_period: 0.20
+  goal_weight: 4.0
+  velocity_weight: 1.2
+  ttc_weight: 5.0
+  clearance_weight: 3.5
+  yaw_weight: 0.8
+  smoothness_weight: 0.4
+  wait_bonus: 1.8
+
+training:
+  task_name: go2_dynamic_obstacles
+  experiment_name: Go2_dynamic_obstacles_pipeline
+  algorithm: dwa_vo_pipeline
+  seed: 42
+  max_iterations: 0
+  num_envs: 1
+  headless: true
+
+evaluation:
+  experiment_name: Go2_dynamic_obstacles_pipeline
+  num_envs: 1
+  headless: false
+  total_episodes: 999999
+
+recording:
+  experiment_name: Go2_dynamic_obstacles_pipeline
+  num_envs: 1
+  headless: true
+  video_length: 3000
+  total_episodes: 3
+
+outputs:
+  log_dir: logs/navigation/dynamic_obstacles_pipeline
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_pipeline
+  video_dir: outputs/videos/navigation/dynamic_obstacles_pipeline
+  metrics_path: outputs/metrics/navigation_dynamic_obstacles_pipeline.json
