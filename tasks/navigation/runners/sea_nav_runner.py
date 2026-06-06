@@ -64,6 +64,34 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "obstacle_amplitude_scale": "SEA_NAV_DYNAMIC_AMPLITUDE_SCALE",
         "obstacle_amplitude_min": "SEA_NAV_DYNAMIC_AMPLITUDE_MIN",
         "obstacle_amplitude_max": "SEA_NAV_DYNAMIC_AMPLITUDE_MAX",
+        "phase_randomization": "SEA_NAV_DYNAMIC_PHASE_RANDOMIZATION",
+        "focus_near_robot": "SEA_NAV_DYNAMIC_FOCUS_NEAR_ROBOT",
+        "focus_distance_min": "SEA_NAV_DYNAMIC_FOCUS_DISTANCE_MIN",
+        "focus_distance_max": "SEA_NAV_DYNAMIC_FOCUS_DISTANCE_MAX",
+        "focus_lateral_min": "SEA_NAV_DYNAMIC_FOCUS_LATERAL_MIN",
+        "focus_lateral_max": "SEA_NAV_DYNAMIC_FOCUS_LATERAL_MAX",
+        "focus_phase_min": "SEA_NAV_DYNAMIC_FOCUS_PHASE_MIN",
+        "focus_phase_max": "SEA_NAV_DYNAMIC_FOCUS_PHASE_MAX",
+        "demo_interaction_scene": "SEA_NAV_DYNAMIC_DEMO_INTERACTION_SCENE",
+        "demo_interaction_face_goal": "SEA_NAV_DYNAMIC_DEMO_FACE_GOAL",
+        "demo_terrain_level": "SEA_NAV_DYNAMIC_DEMO_TERRAIN_LEVEL",
+        "demo_terrain_type": "SEA_NAV_DYNAMIC_DEMO_TERRAIN_TYPE",
+        "demo_goal_distance_min": "SEA_NAV_DYNAMIC_DEMO_GOAL_DISTANCE_MIN",
+        "demo_robot_frac_x": "SEA_NAV_DYNAMIC_DEMO_ROBOT_FRAC_X",
+        "demo_robot_frac_y": "SEA_NAV_DYNAMIC_DEMO_ROBOT_FRAC_Y",
+        "demo_goal_frac_x": "SEA_NAV_DYNAMIC_DEMO_GOAL_FRAC_X",
+        "demo_goal_frac_y": "SEA_NAV_DYNAMIC_DEMO_GOAL_FRAC_Y",
+        "demo_force_path_obstacles": "SEA_NAV_DYNAMIC_DEMO_FORCE_PATH_OBSTACLES",
+        "demo_path_lateral_spacing": "SEA_NAV_DYNAMIC_DEMO_PATH_LATERAL_SPACING",
+        "demo_path_obstacle_frac_start": "SEA_NAV_DYNAMIC_DEMO_PATH_OBSTACLE_FRAC_START",
+        "demo_path_obstacle_frac_step": "SEA_NAV_DYNAMIC_DEMO_PATH_OBSTACLE_FRAC_STEP",
+        "demo_path_obstacle_fracs": "SEA_NAV_DYNAMIC_DEMO_PATH_OBSTACLE_FRACS",
+        "demo_path_lateral_offsets": "SEA_NAV_DYNAMIC_DEMO_PATH_LATERAL_OFFSETS",
+        "demo_motion_range_scale": "SEA_NAV_DYNAMIC_DEMO_MOTION_RANGE_SCALE",
+        "demo_pedestrian_range_scale": "SEA_NAV_DYNAMIC_DEMO_PEDESTRIAN_RANGE_SCALE",
+        "demo_backtrack_range_scale": "SEA_NAV_DYNAMIC_DEMO_BACKTRACK_RANGE_SCALE",
+        "demo_random_range_scale": "SEA_NAV_DYNAMIC_DEMO_RANDOM_RANGE_SCALE",
+        "demo_motion_range_max": "SEA_NAV_DYNAMIC_DEMO_MOTION_RANGE_MAX",
         "dynamic_obstacle_state_k": "SEA_NAV_DYNAMIC_OBS_K",
         "ttc_horizon": "SEA_NAV_DYNAMIC_TTC_HORIZON",
         "path_block_distance": "SEA_NAV_DYNAMIC_PATH_BLOCK_DISTANCE",
@@ -76,6 +104,7 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "wait_speed": "SEA_NAV_DYNAMIC_WAIT_SPEED",
         "ttc_safe_distance": "SEA_NAV_DYNAMIC_TTC_SAFE_DISTANCE",
         "blocked_timeout": "SEA_NAV_DYNAMIC_BLOCKED_TIMEOUT",
+        "episode_length_s": "SEA_NAV_ENV_EPISODE_LENGTH_S",
     }
     for cfg_key, env_key in mapping.items():
         if cfg_key in environment_cfg:
@@ -94,6 +123,14 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
     reward_mapping = {
         "progress": "SEA_NAV_REWARD_PROGRESS",
         "preferred_velocity": "SEA_NAV_REWARD_PREFERRED_VELOCITY",
+        "termination": "SEA_NAV_REWARD_TERMINATION",
+        "collision": "SEA_NAV_REWARD_COLLISION",
+        "close_obst_vel": "SEA_NAV_REWARD_CLOSE_OBST_VEL",
+        "stuck": "SEA_NAV_REWARD_STUCK",
+        "velo_dir": "SEA_NAV_REWARD_VELO_DIR",
+        "reach_pos_target_tight": "SEA_NAV_REWARD_REACH_POS_TARGET_TIGHT",
+        "ang_vel_xy": "SEA_NAV_REWARD_ANG_VEL_XY",
+        "proximity": "SEA_NAV_REWARD_PROXIMITY",
         "dynamic_ttc": "SEA_NAV_REWARD_DYNAMIC_TTC",
         "dynamic_clearance": "SEA_NAV_REWARD_DYNAMIC_CLEARANCE",
         "wait": "SEA_NAV_REWARD_WAIT",
@@ -101,6 +138,12 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "detour": "SEA_NAV_REWARD_DETOUR",
         "near_goal_stop": "SEA_NAV_REWARD_NEAR_GOAL_STOP",
         "dynamic_collision": "SEA_NAV_REWARD_DYNAMIC_COLLISION",
+        "successful_avoidance": "SEA_NAV_REWARD_SUCCESSFUL_AVOIDANCE",
+        "risk_reduction": "SEA_NAV_REWARD_RISK_REDUCTION",
+        "free_space_action": "SEA_NAV_REWARD_FREE_SPACE_ACTION",
+        "unsafe_ttc": "SEA_NAV_REWARD_UNSAFE_TTC",
+        "nav_action_smoothness": "SEA_NAV_REWARD_NAV_ACTION_SMOOTHNESS",
+        "static_collision": "SEA_NAV_REWARD_STATIC_COLLISION",
         "progress_blocked_scale": "SEA_NAV_REWARD_PROGRESS_BLOCKED_SCALE",
         "progress_near_goal_scale": "SEA_NAV_REWARD_PROGRESS_NEAR_GOAL_SCALE",
         "preferred_sigma": "SEA_NAV_REWARD_PREFERRED_SIGMA",
@@ -121,6 +164,17 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "near_goal_speed": "SEA_NAV_REWARD_NEAR_GOAL_SPEED",
         "near_goal_max_speed": "SEA_NAV_REWARD_NEAR_GOAL_MAX_SPEED",
         "near_goal_max_yaw_rate": "SEA_NAV_REWARD_NEAR_GOAL_MAX_YAW_RATE",
+        "avoid_high_risk_distance": "SEA_NAV_REWARD_AVOID_HIGH_RISK_DISTANCE",
+        "avoid_low_risk_distance": "SEA_NAV_REWARD_AVOID_LOW_RISK_DISTANCE",
+        "avoid_high_risk_ttc": "SEA_NAV_REWARD_AVOID_HIGH_RISK_TTC",
+        "avoid_low_risk_ttc": "SEA_NAV_REWARD_AVOID_LOW_RISK_TTC",
+        "avoid_min_static_clearance": "SEA_NAV_REWARD_AVOID_MIN_STATIC_CLEARANCE",
+        "risk_reduction_distance_weight": "SEA_NAV_REWARD_RISK_REDUCTION_DISTANCE_WEIGHT",
+        "risk_reduction_ttc_weight": "SEA_NAV_REWARD_RISK_REDUCTION_TTC_WEIGHT",
+        "free_space_safe_distance": "SEA_NAV_REWARD_FREE_SPACE_SAFE_DISTANCE",
+        "free_space_speed_threshold": "SEA_NAV_REWARD_FREE_SPACE_SPEED_THRESHOLD",
+        "unsafe_ttc_threshold": "SEA_NAV_REWARD_UNSAFE_TTC_THRESHOLD",
+        "nav_action_smoothness_sigma": "SEA_NAV_REWARD_NAV_ACTION_SMOOTHNESS_SIGMA",
     }
     for cfg_key, env_key in reward_mapping.items():
         if cfg_key in reward_cfg:
@@ -153,6 +207,16 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "hybrid_ttc_horizon": "SEA_NAV_HYBRID_TTC_HORIZON",
         "hybrid_stop_ttc": "SEA_NAV_HYBRID_STOP_TTC",
         "hybrid_slow_ttc": "SEA_NAV_HYBRID_SLOW_TTC",
+        "hybrid_dynamic_rollout_horizon": "SEA_NAV_HYBRID_DYNAMIC_ROLLOUT_HORIZON",
+        "hybrid_crossing_window_horizon": "SEA_NAV_HYBRID_CROSSING_WINDOW_HORIZON",
+        "hybrid_static_rollout_horizon": "SEA_NAV_HYBRID_STATIC_ROLLOUT_HORIZON",
+        "hybrid_rollout_dt": "SEA_NAV_HYBRID_ROLLOUT_DT",
+        "hybrid_simple_speed_filter": "SEA_NAV_HYBRID_SIMPLE_SPEED_FILTER",
+        "hybrid_soft_scale": "SEA_NAV_HYBRID_SOFT_SCALE",
+        "hybrid_crossing_commit_time": "SEA_NAV_HYBRID_CROSSING_COMMIT_TIME",
+        "hybrid_max_wait_time": "SEA_NAV_HYBRID_MAX_WAIT_TIME",
+        "hybrid_crossing_speed": "SEA_NAV_HYBRID_CROSSING_SPEED",
+        "hybrid_robot_radius": "SEA_NAV_HYBRID_ROBOT_RADIUS",
         "hybrid_front_ray_clearance": "SEA_NAV_HYBRID_FRONT_RAY_CLEARANCE",
         "hybrid_max_lateral_speed": "SEA_NAV_HYBRID_MAX_LATERAL_SPEED",
         "hybrid_escape_yaw_rate": "SEA_NAV_HYBRID_ESCAPE_YAW_RATE",
@@ -163,6 +227,10 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "hybrid_static_weight": "SEA_NAV_HYBRID_STATIC_WEIGHT",
         "hybrid_wait_bonus": "SEA_NAV_HYBRID_WAIT_BONUS",
         "hybrid_smoothness_weight": "SEA_NAV_HYBRID_SMOOTHNESS_WEIGHT",
+        "emergency_policy_checkpoint": "SEA_NAV_EMERGENCY_POLICY_CHECKPOINT",
+        "emergency_policy_blend": "SEA_NAV_EMERGENCY_POLICY_BLEND",
+        "emergency_policy_trigger_distance": "SEA_NAV_EMERGENCY_POLICY_TRIGGER_DISTANCE",
+        "emergency_policy_trigger_ttc": "SEA_NAV_EMERGENCY_POLICY_TRIGGER_TTC",
     }
     for cfg_key, env_key in pipeline_mapping.items():
         if cfg_key in pipeline_cfg:
@@ -250,6 +318,20 @@ def _command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) -> tu
             env["SEA_NAV_PLAY_HEADLESS"] = "1" if _bool(recording_cfg.get("headless"), True) else "0"
             env["SEA_NAV_VIDEO_LENGTH"] = str(int(recording_cfg.get("video_length", 2000)))
             env["SEA_NAV_TOTAL_EPISODES"] = str(int(recording_cfg.get("total_episodes", 3)))
+            if _bool(recording_cfg.get("segment_by_episode"), False):
+                env["SEA_NAV_SEGMENT_VIDEO_BY_EPISODE"] = "1"
+            if "camera_mode" in recording_cfg:
+                env["SEA_NAV_RECORD_CAMERA_MODE"] = str(recording_cfg["camera_mode"])
+            if "topdown_height" in recording_cfg:
+                env["SEA_NAV_RECORD_TOPDOWN_HEIGHT"] = str(recording_cfg["topdown_height"])
+            if "camera_fov" in recording_cfg:
+                env["SEA_NAV_RECORD_FOV"] = str(recording_cfg["camera_fov"])
+            if "width" in recording_cfg:
+                env["SEA_NAV_RECORD_WIDTH"] = str(int(recording_cfg["width"]))
+            if "height" in recording_cfg:
+                env["SEA_NAV_RECORD_HEIGHT"] = str(int(recording_cfg["height"]))
+            if _bool(recording_cfg.get("gui_style"), False):
+                env["SEA_NAV_RECORD_GUI_STYLE"] = "1"
         elif command == "eval":
             env["SEA_NAV_PLAY_HEADLESS"] = "1"
             env["SEA_NAV_TOTAL_EPISODES"] = str(int(evaluation_cfg.get("total_episodes", 10)))
@@ -289,10 +371,28 @@ def _copy_recorded_video(cfg: Mapping[str, Any], checkpoint: str | None) -> Path
         / "exported"
         / f"{video_stem}.mp4"
     )
-    if not source.exists():
-        return None
     video_dir = _expand_path(str(outputs_cfg.get("video_dir", "outputs/videos/navigation/sea_nav_baseline")))
     video_dir.mkdir(parents=True, exist_ok=True)
+    if _bool(recording_cfg.get("segment_by_episode"), False):
+        episode_source_dir = (
+            sea_nav_path
+            / "training"
+            / "legged_gym"
+            / "logs"
+            / experiment_name
+            / "exported"
+            / "episodes"
+        )
+        episode_sources = sorted(episode_source_dir.glob(f"{video_stem}_episode_*.mp4"))
+        if episode_sources:
+            copied_dir = video_dir / f"sea_nav_demo_model_{checkpoint_number}_episodes"
+            copied_dir.mkdir(parents=True, exist_ok=True)
+            for episode_source in episode_sources:
+                suffix = episode_source.stem.replace(f"{video_stem}_", "")
+                shutil.copy2(episode_source, copied_dir / f"sea_nav_demo_model_{checkpoint_number}_{suffix}.mp4")
+            return copied_dir
+    if not source.exists():
+        return None
     dest = video_dir / dest_name
     shutil.copy2(source, dest)
     return dest

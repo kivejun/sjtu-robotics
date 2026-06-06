@@ -5,13 +5,18 @@ task:
 
 external_repo:
   path: external/SEA-Nav-Code
-  note: N1 hybrid route. SEA-Nav policy keeps static navigation ability; TTC/VO safety filter handles dynamic obstacles.
+  note: >
+    Current best N1 engineering baseline backup. This uses the original
+    SEA-Nav navigation baseline policy without explicit dynamic-obstacle
+    observation, plus a low-intervention TTC/VO-style DMA hybrid safety filter.
+    Keep this file unchanged as the rollback/reference policy while developing
+    RL high-risk avoidance.
 
 runtime:
   conda_env: sea_nav
 
 environment:
-  scene: dynamic_obstacles_hybrid
+  scene: dynamic_obstacles_mixed_policy_best
   goal_randomization: true
   enable_dynamic_obstacles: true
   num_dynamic_obstacles: 3
@@ -25,7 +30,7 @@ environment:
   obstacle_amplitude_scale: 0.55
   obstacle_amplitude_min: 0.35
   obstacle_amplitude_max: 1.35
-  include_dynamic_obstacle_state: true
+  include_dynamic_obstacle_state: false
   dynamic_obstacle_state_k: 3
   ttc_horizon: 3.0
   path_block_distance: 3.0
@@ -69,28 +74,28 @@ pipeline:
 
 training:
   task_name: go2_dynamic_obstacles
-  experiment_name: Go2_dynamic_obstacles_obs
-  algorithm: sea_nav_policy_plus_ttc_vo_safety_filter
+  experiment_name: Go2_pos_rough
+  algorithm: sea_nav_baseline_policy_plus_dma_hybrid_safety_filter
   seed: 42
   max_iterations: 0
   num_envs: 1
   headless: true
 
 evaluation:
-  experiment_name: Go2_dynamic_obstacles_obs
+  experiment_name: Go2_pos_rough
   num_envs: 1
   headless: false
   total_episodes: 999999
 
 recording:
-  experiment_name: Go2_dynamic_obstacles_obs
+  experiment_name: Go2_pos_rough
   num_envs: 1
   headless: true
   video_length: 3000
   total_episodes: 3
 
 outputs:
-  log_dir: logs/navigation/dynamic_obstacles_hybrid
-  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_hybrid
-  video_dir: outputs/videos/navigation/dynamic_obstacles_hybrid
-  metrics_path: outputs/metrics/navigation_dynamic_obstacles_hybrid.json
+  log_dir: logs/navigation/dynamic_obstacles_mixed_policy_best
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_mixed_policy_best
+  video_dir: outputs/videos/navigation/dynamic_obstacles_mixed_policy_best
+  metrics_path: outputs/metrics/navigation_dynamic_obstacles_mixed_policy_best.json
