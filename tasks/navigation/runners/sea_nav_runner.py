@@ -54,6 +54,23 @@ def _checkpoint_to_load_args(checkpoint: str | None) -> tuple[str | None, str | 
 
 def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> None:
     environment_cfg = _section(cfg, "environment")
+    training_cfg = _section(cfg, "training")
+    if "policy_class_name" in training_cfg:
+        env["SEA_NAV_POLICY_CLASS_NAME"] = str(training_cfg["policy_class_name"])
+
+    policy_cfg = _section(cfg, "policy")
+    policy_mapping = {
+        "transformer_dim": "SEA_NAV_POLICY_TRANSFORMER_DIM",
+        "transformer_heads": "SEA_NAV_POLICY_TRANSFORMER_HEADS",
+        "transformer_layers": "SEA_NAV_POLICY_TRANSFORMER_LAYERS",
+        "transformer_dropout": "SEA_NAV_POLICY_TRANSFORMER_DROPOUT",
+        "dynamic_token_dim": "SEA_NAV_POLICY_DYNAMIC_TOKEN_DIM",
+        "dynamic_global_dim": "SEA_NAV_POLICY_DYNAMIC_GLOBAL_DIM",
+    }
+    for cfg_key, env_key in policy_mapping.items():
+        if cfg_key in policy_cfg:
+            env[env_key] = str(policy_cfg[cfg_key])
+
     mapping = {
         "enable_dynamic_obstacles": "SEA_NAV_DYNAMIC_ENABLE",
         "use_legacy_dynamic_reward": "SEA_NAV_DYNAMIC_LEGACY_REWARD",
@@ -72,6 +89,11 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "focus_lateral_max": "SEA_NAV_DYNAMIC_FOCUS_LATERAL_MAX",
         "focus_phase_min": "SEA_NAV_DYNAMIC_FOCUS_PHASE_MIN",
         "focus_phase_max": "SEA_NAV_DYNAMIC_FOCUS_PHASE_MAX",
+        "training_interaction_scene": "SEA_NAV_DYNAMIC_TRAINING_INTERACTION_SCENE",
+        "training_interaction_robot_jitter": "SEA_NAV_DYNAMIC_TRAINING_ROBOT_JITTER",
+        "training_interaction_goal_jitter": "SEA_NAV_DYNAMIC_TRAINING_GOAL_JITTER",
+        "training_interaction_obstacle_frac_jitter": "SEA_NAV_DYNAMIC_TRAINING_OBSTACLE_FRAC_JITTER",
+        "training_interaction_obstacle_lateral_jitter": "SEA_NAV_DYNAMIC_TRAINING_OBSTACLE_LATERAL_JITTER",
         "demo_interaction_scene": "SEA_NAV_DYNAMIC_DEMO_INTERACTION_SCENE",
         "demo_interaction_face_goal": "SEA_NAV_DYNAMIC_DEMO_FACE_GOAL",
         "demo_terrain_level": "SEA_NAV_DYNAMIC_DEMO_TERRAIN_LEVEL",
@@ -108,7 +130,11 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
     }
     for cfg_key, env_key in mapping.items():
         if cfg_key in environment_cfg:
-            env[env_key] = str(environment_cfg[cfg_key])
+            value = environment_cfg[cfg_key]
+            if isinstance(value, list):
+                env[env_key] = ",".join(str(item) for item in value)
+            else:
+                env[env_key] = str(value)
 
     if "include_dynamic_obstacle_state" in environment_cfg:
         env["SEA_NAV_DYNAMIC_OBS_STATE"] = "1" if _bool(environment_cfg["include_dynamic_obstacle_state"]) else "0"
@@ -179,6 +205,22 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
     for cfg_key, env_key in reward_mapping.items():
         if cfg_key in reward_cfg:
             env[env_key] = str(reward_cfg[cfg_key])
+
+    replay_cfg = _section(cfg, "replay")
+    replay_mapping = {
+        "enable_collision_replay": "SEA_NAV_REPLAY_ENABLE_COLLISION_REPLAY",
+        "replay_prob": "SEA_NAV_REPLAY_PROB",
+        "early_reset_prob_range": "SEA_NAV_REPLAY_EARLY_RESET_PROB_RANGE",
+        "undo_steps_range": "SEA_NAV_REPLAY_UNDO_STEPS_RANGE",
+        "max_collision_points": "SEA_NAV_REPLAY_MAX_COLLISION_POINTS",
+    }
+    for cfg_key, env_key in replay_mapping.items():
+        if cfg_key in replay_cfg:
+            value = replay_cfg[cfg_key]
+            if isinstance(value, list):
+                env[env_key] = ",".join(str(item) for item in value)
+            else:
+                env[env_key] = str(value)
 
     pipeline_cfg = _section(cfg, "pipeline")
     pipeline_mapping = {
@@ -262,6 +304,7 @@ def _command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) -> tu
     task_name = str(training_cfg.get("task_name", "go2_pos_rough"))
     experiment_name = str(training_cfg.get("experiment_name", "Go2_pos_rough"))
     env = os.environ.copy()
+    env.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
     wandb_enabled = env.get("SEA_NAV_ENABLE_WANDB") == "1"
     if wandb_enabled:
         env.pop("WANDB_DISABLED", None)

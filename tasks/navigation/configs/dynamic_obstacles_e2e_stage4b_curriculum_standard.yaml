@@ -1,0 +1,126 @@
+task:
+  name: navigation/dynamic_obstacles
+  family: navigation
+  backend: sea_nav_modified_or_isaaclab
+
+external_repo:
+  path: external/SEA-Nav-Code
+  note: E2E dynamic avoidance stage 4B. Standard-speed fixed three-obstacle curriculum.
+
+runtime:
+  conda_env: sea_nav
+
+environment:
+  scene: dynamic_obstacles_e2e_stage4b_curriculum_standard
+  goal_randomization: true
+  enable_dynamic_obstacles: true
+  num_dynamic_obstacles: 3
+  obstacle_motion_modes:
+    - pedestrian_like
+    - back_and_forth
+    - random_rigid_body
+  obstacle_radius: 0.35
+  obstacle_speed: 0.43
+  obstacle_collision_distance: 0.60
+  obstacle_amplitude_scale: 0.55
+  obstacle_amplitude_min: 0.35
+  obstacle_amplitude_max: 1.35
+  phase_randomization: false
+  include_dynamic_obstacle_state: true
+  dynamic_obstacle_state_k: 3
+  ttc_horizon: 3.0
+  ttc_safe_distance: 0.60
+  path_block_distance: 3.0
+  path_block_width: 0.95
+  path_block_ttc: 3.0
+  path_block_rise: 0.25
+  path_block_fall: 0.05
+  path_block_threshold: 0.40
+  preferred_speed: 0.54
+  wait_speed: 0.08
+  blocked_timeout: 2.3
+
+replay:
+  enable_collision_replay: true
+  replay_prob: 0.60
+  early_reset_prob_range: [0.10, 0.55]
+  undo_steps_range: [80, 140]
+  max_collision_points: 16
+
+reward:
+  progress: 5.8
+  preferred_velocity: 2.5
+  dynamic_ttc: -5.0
+  dynamic_clearance: -2.5
+  wait: 1.3
+  blocked_fast_penalty: -1.7
+  detour: -0.42
+  near_goal_stop: 2.0
+  dynamic_collision: -135.0
+  static_collision: -125.0
+  successful_avoidance: 3.2
+  risk_reduction: 1.8
+  free_space_action: 0.6
+  unsafe_ttc: -1.1
+  nav_action_smoothness: -0.24
+  progress_blocked_scale: 0.11
+  progress_near_goal_scale: 0.16
+  preferred_sigma: 0.45
+  ttc_min_closing_speed: 0.03
+  clearance_safe_distance: 1.25
+  clearance_front_margin: -0.15
+  wait_max_speed: 0.12
+  wait_heading_weight: 1.0
+  wait_timeout_decay: 0.18
+  blocked_fast_speed_threshold: 0.18
+  blocked_fast_ttc_threshold: 2.0
+  blocked_fast_closing_speed_threshold: 0.05
+  detour_lateral_weight: 1.0
+  detour_yaw_weight: 0.5
+  detour_blocked_scale: 0.04
+  detour_timeout_scale: 0.22
+  near_goal_distance: 0.60
+  near_goal_speed: 0.03
+  near_goal_max_speed: 0.10
+  near_goal_max_yaw_rate: 0.35
+  avoid_high_risk_distance: 1.05
+  avoid_low_risk_distance: 1.35
+  avoid_high_risk_ttc: 1.30
+  avoid_low_risk_ttc: 2.50
+  avoid_min_static_clearance: 0.45
+  risk_reduction_distance_weight: 0.55
+  risk_reduction_ttc_weight: 0.45
+  free_space_safe_distance: 0.65
+  free_space_speed_threshold: 0.08
+  unsafe_ttc_threshold: 1.00
+  nav_action_smoothness_sigma: 0.50
+
+training:
+  task_name: go2_dynamic_obstacles
+  experiment_name: Go2_e2e_dynamic_avoidance
+  algorithm: ppo
+  seed: 42
+  max_iterations: 3000
+  num_envs: 768
+  headless: true
+  reset_optimizer: false
+
+evaluation:
+  experiment_name: Go2_e2e_dynamic_avoidance
+  num_envs: 1
+  headless: false
+  total_episodes: 20
+
+recording:
+  experiment_name: Go2_e2e_dynamic_avoidance
+  num_envs: 1
+  headless: true
+  video_length: 3000
+  total_episodes: 5
+
+outputs:
+  log_dir: logs/navigation/dynamic_obstacles_e2e_stage4b_curriculum_standard
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_e2e_stage4b_curriculum_standard
+  video_dir: outputs/videos/navigation/dynamic_obstacles_e2e_stage4b_curriculum_standard
+  metrics_path: outputs/metrics/navigation_dynamic_obstacles_e2e_stage4b_curriculum_standard.json
+

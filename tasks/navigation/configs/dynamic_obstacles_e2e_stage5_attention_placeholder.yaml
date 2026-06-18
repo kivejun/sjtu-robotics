@@ -1,0 +1,44 @@
+task:
+  name: navigation/dynamic_obstacles
+  family: navigation
+  backend: sea_nav_modified_or_isaaclab
+
+external_repo:
+  path: external/SEA-Nav-Code
+  note: >
+    Placeholder for the stage-5 attention/graph encoder idea. This file is not
+    part of the executable multistage training plan yet because the current
+    SEA-Nav policy still uses a flat MLP observation vector. Running this stage
+    requires implementing a graph/attention encoder and checkpoint conversion.
+
+runtime:
+  conda_env: sea_nav
+
+environment:
+  scene: dynamic_obstacles_e2e_stage5_attention_placeholder
+  goal_randomization: true
+  enable_dynamic_obstacles: true
+  num_dynamic_obstacles: 3
+  obstacle_motion_modes:
+    - pedestrian_like
+    - back_and_forth
+    - random_rigid_body
+  include_dynamic_obstacle_state: true
+  dynamic_obstacle_state_k: 3
+
+training:
+  task_name: go2_dynamic_obstacles
+  experiment_name: Go2_e2e_dynamic_avoidance_attention_placeholder
+  algorithm: ppo
+  seed: 42
+  max_iterations: 0
+  num_envs: 768
+  headless: true
+  reset_optimizer: false
+
+outputs:
+  log_dir: logs/navigation/dynamic_obstacles_e2e_stage5_attention_placeholder
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_e2e_stage5_attention_placeholder
+  video_dir: outputs/videos/navigation/dynamic_obstacles_e2e_stage5_attention_placeholder
+  metrics_path: outputs/metrics/navigation_dynamic_obstacles_e2e_stage5_attention_placeholder.json
+

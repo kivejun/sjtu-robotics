@@ -14,7 +14,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SEA_NAV_ROOT = REPO_ROOT / "external" / "SEA-Nav-Code"
-LOG_ROOT = SEA_NAV_ROOT / "training" / "legged_gym" / "logs" / "Go2_dynamic_obstacles_obs"
 RUN_RE = re.compile(r"^(\d{2}_\d{2}_\d{2}-\d{2}-\d{2}.*)$")
 ITER_RE = re.compile(r"(?:\[timing\] iter=|Iteration:\s+)(\d+)")
 
@@ -52,29 +51,107 @@ THREE_OBSTACLE_CURRICULUM_STAGES = [
     ),
 ]
 
+E2E_DYNAMIC_AVOIDANCE_STAGES = [
+    Stage(
+        "stage1_dynamic_avoidance",
+        "tasks/navigation/configs/dynamic_obstacles_e2e_stage1_avoidance.yaml",
+        3000,
+    ),
+    Stage(
+        "stage2_recovery_resume",
+        "tasks/navigation/configs/dynamic_obstacles_e2e_stage2_recovery.yaml",
+        3000,
+    ),
+    Stage(
+        "stage3_failure_replay",
+        "tasks/navigation/configs/dynamic_obstacles_e2e_stage3_failure_replay.yaml",
+        3000,
+    ),
+    Stage(
+        "stage4a_curriculum_low_speed",
+        "tasks/navigation/configs/dynamic_obstacles_e2e_stage4a_curriculum_low_speed.yaml",
+        2000,
+    ),
+    Stage(
+        "stage4b_curriculum_standard",
+        "tasks/navigation/configs/dynamic_obstacles_e2e_stage4b_curriculum_standard.yaml",
+        3000,
+    ),
+    Stage(
+        "stage4c_curriculum_random",
+        "tasks/navigation/configs/dynamic_obstacles_e2e_stage4c_curriculum_random.yaml",
+        4000,
+    ),
+    Stage(
+        "stage4d_curriculum_mild_adversarial",
+        "tasks/navigation/configs/dynamic_obstacles_e2e_stage4d_curriculum_mild_adversarial.yaml",
+        4000,
+    ),
+]
+
+TRANSFORMER_DYNAMIC_AVOIDANCE_STAGES = [
+    Stage(
+        "stage1_transformer_avoidance",
+        "tasks/navigation/configs/dynamic_obstacles_transformer_stage1_avoidance.yaml",
+        1500,
+    ),
+    Stage(
+        "stage2_transformer_recovery_resume",
+        "tasks/navigation/configs/dynamic_obstacles_transformer_stage2_recovery.yaml",
+        2500,
+    ),
+    Stage(
+        "stage3_transformer_failure_replay",
+        "tasks/navigation/configs/dynamic_obstacles_transformer_stage3_failure_replay.yaml",
+        3000,
+    ),
+    Stage(
+        "stage4a_transformer_low_speed",
+        "tasks/navigation/configs/dynamic_obstacles_transformer_stage4a_low_speed.yaml",
+        2000,
+    ),
+    Stage(
+        "stage4b_transformer_standard",
+        "tasks/navigation/configs/dynamic_obstacles_transformer_stage4b_standard.yaml",
+        3000,
+    ),
+    Stage(
+        "stage4c_transformer_random",
+        "tasks/navigation/configs/dynamic_obstacles_transformer_stage4c_random.yaml",
+        4000,
+    ),
+    Stage(
+        "stage4d_transformer_mild_adversarial",
+        "tasks/navigation/configs/dynamic_obstacles_transformer_stage4d_mild_adversarial.yaml",
+        4000,
+    ),
+]
+
 STAGE_PLANS = {
     "obs_full": OBS_STAGES,
     "three_obstacle_curriculum": THREE_OBSTACLE_CURRICULUM_STAGES,
+    "e2e_dynamic_avoidance": E2E_DYNAMIC_AVOIDANCE_STAGES,
+    "transformer_dynamic_avoidance": TRANSFORMER_DYNAMIC_AVOIDANCE_STAGES,
 }
 
 
-def list_runs() -> set[str]:
-    if not LOG_ROOT.exists():
+def list_runs(log_root: Path) -> set[str]:
+    if not log_root.exists():
         return set()
-    return {p.name for p in LOG_ROOT.iterdir() if p.is_dir() and RUN_RE.match(p.name)}
+    return {p.name for p in log_root.iterdir() if p.is_dir() and RUN_RE.match(p.name)}
 
 
-def latest_new_run(before: set[str]) -> Path:
+def latest_new_run(log_root: Path, before: set[str]) -> Path:
     deadline = time.time() + 30.0
     while time.time() < deadline:
-        after = sorted(list_runs() - before)
+        after = sorted(list_runs(log_root) - before)
         if after:
-            return LOG_ROOT / after[-1]
+            return log_root / after[-1]
         time.sleep(0.5)
-    runs = sorted(list_runs())
+    runs = sorted(list_runs(log_root))
     if not runs:
-        raise RuntimeError(f"No SEA-Nav runs found under {LOG_ROOT}")
-    return LOG_ROOT / runs[-1]
+        raise RuntimeError(f"No SEA-Nav runs found under {log_root}")
+    return log_root / runs[-1]
 
 
 def latest_checkpoint(run_dir: Path) -> Path:
@@ -94,6 +171,27 @@ def checkpoint_iteration(path: Path | None) -> int:
         return 0
     match = re.fullmatch(r"model_(\d+)\.pt", path.name)
     return int(match.group(1)) if match else 0
+
+
+def experiment_name_from_config(config: str) -> str:
+    path = REPO_ROOT / config
+    text = path.read_text(encoding="utf-8")
+    in_training = False
+    for line in text.splitlines():
+        if line.startswith("training:"):
+            in_training = True
+            continue
+        if in_training and line and not line.startswith(" "):
+            in_training = False
+        if in_training:
+            match = re.match(r"^\s+experiment_name:\s*(.+?)\s*$", line)
+            if match:
+                return match.group(1).strip().strip("'\"")
+    return "Go2_dynamic_obstacles_obs"
+
+
+def log_root_for_config(config: str) -> Path:
+    return SEA_NAV_ROOT / "training" / "legged_gym" / "logs" / experiment_name_from_config(config)
 
 
 def stage_command(stage: Stage, checkpoint: Path | None) -> list[str]:
@@ -145,7 +243,6 @@ def make_remaining_config(stage: Stage, start_iter: int, log_dir: Path) -> str:
 
 
 def run_stage(stage: Stage, checkpoint: Path | None, log_dir: Path, resume_to_stage_target: bool = False) -> Path:
-    before = list_runs()
     log_path = log_dir / f"{stage.name}.log"
     env = os.environ.copy()
     env["PYTHONPATH"] = "src"
@@ -159,6 +256,8 @@ def run_stage(stage: Stage, checkpoint: Path | None, log_dir: Path, resume_to_st
     if resume_to_stage_target and checkpoint is not None and start_iter < stage.max_iterations:
         stage_to_run = Stage(stage.name, make_remaining_config(stage, start_iter, log_dir), stage.max_iterations)
 
+    run_log_root = log_root_for_config(stage_to_run.config)
+    before = list_runs(run_log_root)
     cmd = stage_command(stage_to_run, checkpoint)
     print(f"\n[stage-start] {stage.name}")
     print(f"[stage-config] {stage_to_run.config}")
@@ -223,7 +322,7 @@ def run_stage(stage: Stage, checkpoint: Path | None, log_dir: Path, resume_to_st
         if code != 0:
             raise RuntimeError(f"{stage.name} failed with exit code {code}. See {log_path}")
 
-    run_dir = latest_new_run(before)
+    run_dir = latest_new_run(run_log_root, before)
     checkpoint_out = latest_checkpoint(run_dir)
     print(f"[stage-done] {stage.name} run={run_dir.name} checkpoint={checkpoint_out}")
     sys.stdout.flush()
