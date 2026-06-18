@@ -35,6 +35,7 @@ outputs/figures/
 outputs/metrics/
 outputs/conversations/
 outputs/conversions/
+outputs/conversions
 experiments/*/runs/
 
 # Large datasets and assets
@@ -63,7 +64,9 @@ assets/**/*.fbx
 
 # Vendored external runtime artifacts
 external/**/logs/
+external/**/logs
 external/**/wandb/
+external/**/wandb
 
 # Local external repositories
 external/IsaacLab/
