@@ -34,6 +34,7 @@ outputs/videos/
 outputs/figures/
 outputs/metrics/
 outputs/conversations/
+outputs/conversions/
 experiments/*/runs/
 
 # Large datasets and assets
@@ -60,6 +61,9 @@ assets/**/*.fbx
 *.mkv
 *.gif
 
+# Vendored external runtime artifacts
+external/**/logs/
+external/**/wandb/
+
 # Local external repositories
-external/
 third_party/
