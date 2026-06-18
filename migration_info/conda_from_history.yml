@@ -1,0 +1,6 @@
+name: sea_nav
+channels:
+  - defaults
+dependencies:
+  - python=3.8
+prefix: /home/kivejun/anaconda3/envs/sea_nav

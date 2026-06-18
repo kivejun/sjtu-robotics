@@ -1,0 +1,5 @@
+torch: 2.4.1+cu121
+cuda available: True
+cuda version: 12.1
+device count: 1
+device: NVIDIA GeForce RTX 4060 Laptop GPU

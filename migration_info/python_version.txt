@@ -1,0 +1,2 @@
+Python 3.8.20
+/home/kivejun/anaconda3/envs/sea_nav/bin/python

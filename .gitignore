@@ -33,6 +33,7 @@ checkpoints/
 outputs/videos/
 outputs/figures/
 outputs/metrics/
+outputs/conversations/
 experiments/*/runs/
 
 # Large datasets and assets
