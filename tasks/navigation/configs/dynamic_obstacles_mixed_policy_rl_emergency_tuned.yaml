@@ -1,0 +1,118 @@
+task:
+  name: navigation/dynamic_obstacles
+  family: navigation
+  backend: sea_nav_modified_or_isaaclab
+external_repo:
+  path: external/SEA-Nav-Code
+  note: 'Tuned N1 controller: SEA-Nav baseline plus softer TTC/VO speed filter and
+    later RL emergency trigger.'
+runtime:
+  conda_env: sea_nav
+environment:
+  scene: dynamic_obstacles_mixed_policy_rl_emergency_tuned
+  goal_randomization: true
+  demo_interaction_scene: true
+  demo_interaction_face_goal: true
+  demo_terrain_level: 1
+  demo_terrain_type: 0
+  demo_goal_distance_min: 3.5
+  demo_robot_frac_x: 0.52
+  demo_robot_frac_y: 0.42
+  demo_goal_frac_x: 0.52
+  demo_goal_frac_y: 0.78
+  demo_force_path_obstacles: true
+  demo_path_lateral_spacing: 0.0
+  demo_path_obstacle_frac_start: 0.25
+  demo_path_obstacle_frac_step: 0.25
+  demo_path_obstacle_fracs: 0.24,0.48,0.62
+  demo_path_lateral_offsets: 0.00,0.00,-0.08
+  demo_motion_range_scale: 1.0
+  demo_pedestrian_range_scale: 1.45
+  demo_backtrack_range_scale: 1.0
+  demo_random_range_scale: 1.25
+  demo_motion_range_max: 1.65
+  enable_dynamic_obstacles: true
+  num_dynamic_obstacles: 3
+  obstacle_motion_modes:
+  - pedestrian_like
+  - back_and_forth
+  - random_rigid_body
+  obstacle_radius: 0.35
+  obstacle_speed: 0.28
+  obstacle_collision_distance: 0.6
+  obstacle_amplitude_scale: 0.58
+  obstacle_amplitude_min: 0.4
+  obstacle_amplitude_max: 1.45
+  include_dynamic_obstacle_state: true
+  dynamic_obstacle_state_k: 3
+  ttc_horizon: 3.0
+  path_block_distance: 3.0
+  path_block_width: 1.2
+  path_block_ttc: 3.0
+  path_block_rise: 0.25
+  path_block_fall: 0.05
+  path_block_threshold: 0.4
+  preferred_speed: 0.5
+  wait_speed: 0.0
+  ttc_safe_distance: 0.6
+  blocked_timeout: 3.0
+pipeline:
+  controller: hybrid_safety_filter
+  hybrid_simple_speed_filter: 1
+  hybrid_soft_scale: 0.85
+  hybrid_safe_distance: 0.62
+  hybrid_critical_distance: 0.48
+  hybrid_ttc_horizon: 1.2
+  hybrid_stop_ttc: 0.45
+  hybrid_slow_ttc: 0.85
+  hybrid_dynamic_rollout_horizon: 1.8
+  hybrid_crossing_window_horizon: 1.7
+  hybrid_static_rollout_horizon: 0.8
+  hybrid_rollout_dt: 0.15
+  hybrid_crossing_commit_time: 1.9
+  hybrid_max_wait_time: 1.6
+  hybrid_crossing_speed: 0.42
+  hybrid_robot_radius: 0.3
+  hybrid_front_ray_clearance: 0.28
+  hybrid_max_lateral_speed: 0.3
+  hybrid_escape_yaw_rate: 0.45
+  hybrid_policy_weight: 24.0
+  hybrid_progress_weight: 0.8
+  hybrid_ttc_weight: 3.5
+  hybrid_clearance_weight: 1.2
+  hybrid_static_weight: 0.6
+  hybrid_wait_bonus: 0.0
+  hybrid_smoothness_weight: 0.25
+  emergency_policy_checkpoint: /home/kivejun/sjtu-robotics/external/SEA-Nav-Code/training/legged_gym/logs/Go2_dynamic_avoidance_stage1_encouraged/06_05_00-33-34_/model_2500.pt
+  emergency_policy_blend: 0.75
+  emergency_policy_trigger_distance: 0.5
+  emergency_policy_trigger_ttc: 0.45
+training:
+  task_name: go2_dynamic_obstacles
+  experiment_name: Go2_pos_rough
+  algorithm: sea_nav_baseline_policy_plus_dma_filter_plus_rl_emergency_policy
+  seed: 42
+  max_iterations: 0
+  num_envs: 1
+  headless: true
+evaluation:
+  experiment_name: Go2_pos_rough
+  num_envs: 1
+  headless: false
+  total_episodes: 999999
+recording:
+  experiment_name: Go2_pos_rough
+  num_envs: 1
+  headless: true
+  video_length: 12000
+  total_episodes: 5
+  segment_by_episode: true
+  camera_mode: topdown
+  topdown_height: 13.0
+  camera_fov: 58.0
+  gui_style: true
+outputs:
+  log_dir: logs/navigation/dynamic_obstacles_mixed_policy_rl_emergency_tuned
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_mixed_policy_rl_emergency_tuned
+  video_dir: outputs/videos/navigation/dynamic_obstacles_mixed_policy_rl_emergency_tuned
+  metrics_path: outputs/metrics/navigation_dynamic_obstacles_mixed_policy_rl_emergency_tuned.json

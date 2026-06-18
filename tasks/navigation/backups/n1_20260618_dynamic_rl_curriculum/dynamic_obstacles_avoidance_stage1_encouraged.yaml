@@ -1,0 +1,117 @@
+task:
+  name: navigation/dynamic_obstacles
+  family: navigation
+  backend: sea_nav_modified_or_isaaclab
+
+external_repo:
+  path: external/SEA-Nav-Code
+  note: Encouragement-style Stage 1 training for a high-risk dynamic avoidance skill.
+
+runtime:
+  conda_env: sea_nav
+
+environment:
+  scene: dynamic_obstacles_avoidance_stage1_encouraged
+  goal_randomization: true
+  enable_dynamic_obstacles: true
+  num_dynamic_obstacles: 1
+  obstacle_motion_modes:
+    - pedestrian_like
+  obstacle_radius: 0.35
+  obstacle_speed: 0.45
+  obstacle_collision_distance: 0.55
+  obstacle_amplitude_scale: 0.60
+  obstacle_amplitude_min: 0.45
+  obstacle_amplitude_max: 1.10
+  phase_randomization: true
+  focus_near_robot: true
+  focus_distance_min: 0.85
+  focus_distance_max: 1.35
+  focus_lateral_min: 0.25
+  focus_lateral_max: 0.65
+  focus_phase_min: 0.35
+  focus_phase_max: 0.85
+  include_dynamic_obstacle_state: true
+  dynamic_obstacle_state_k: 3
+  ttc_horizon: 3.0
+  ttc_safe_distance: 0.55
+  path_block_distance: 2.5
+  path_block_width: 0.75
+  path_block_ttc: 2.5
+  path_block_rise: 0.20
+  path_block_fall: 0.08
+  path_block_threshold: 0.45
+  preferred_speed: 0.50
+  wait_speed: 0.08
+  blocked_timeout: 3.0
+  episode_length_s: 4.0
+
+reward:
+  # Stage 1 does not force goal progress. It first learns to avoid dynamic risk
+  # and move into statically safe free space, then later stages hand control back
+  # to the navigation policy.
+  termination: -20.0
+  collision: 0.0
+  close_obst_vel: 0.0
+  stuck: 0.0
+  velo_dir: 0.0
+  reach_pos_target_tight: 0.0
+  ang_vel_xy: -0.02
+  proximity: 0.0
+  progress: 0.0
+  preferred_velocity: 0.0
+  dynamic_ttc: 0.0
+  dynamic_clearance: 0.0
+  wait: 0.0
+  blocked_fast_penalty: 0.0
+  detour: 0.0
+  near_goal_stop: 0.0
+
+  successful_avoidance: 12.0
+  risk_reduction: 4.0
+  free_space_action: 2.0
+  unsafe_ttc: -1.0
+  nav_action_smoothness: -0.2
+  dynamic_collision: -80.0
+  static_collision: -100.0
+
+  avoid_high_risk_distance: 1.05
+  avoid_low_risk_distance: 1.35
+  avoid_high_risk_ttc: 1.30
+  avoid_low_risk_ttc: 2.50
+  avoid_min_static_clearance: 0.45
+  risk_reduction_distance_weight: 0.55
+  risk_reduction_ttc_weight: 0.45
+  free_space_safe_distance: 0.65
+  free_space_speed_threshold: 0.08
+  unsafe_ttc_threshold: 1.00
+  nav_action_smoothness_sigma: 0.50
+
+training:
+  task_name: go2_dynamic_obstacles
+  experiment_name: Go2_dynamic_avoidance_stage1_encouraged
+  algorithm: ppo
+  seed: 42
+  max_iterations: 2500
+  num_envs: 768
+  headless: true
+  reset_optimizer: true
+
+evaluation:
+  experiment_name: Go2_dynamic_avoidance_stage1_encouraged
+  num_envs: 1
+  headless: false
+  total_episodes: 5
+
+recording:
+  experiment_name: Go2_dynamic_avoidance_stage1_encouraged
+  num_envs: 1
+  headless: true
+  video_length: 1800
+  total_episodes: 5
+
+outputs:
+  log_dir: logs/navigation/dynamic_obstacles_avoidance_stage1_encouraged
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_avoidance_stage1_encouraged
+  video_dir: outputs/videos/navigation/dynamic_obstacles_avoidance_stage1_encouraged
+  metrics_path: outputs/metrics/navigation_dynamic_obstacles_avoidance_stage1_encouraged.json

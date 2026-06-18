@@ -1,0 +1,101 @@
+task:
+  name: navigation/dynamic_obstacles
+  family: navigation
+  backend: sea_nav_modified_or_isaaclab
+
+external_repo:
+  path: external/SEA-Nav-Code
+  note: N1 stage C. Final three-obstacle setting with randomized obstacle phases and wider trajectory variation.
+
+runtime:
+  conda_env: sea_nav
+
+environment:
+  scene: dynamic_obstacles_obs_stageC_three_random
+  goal_randomization: true
+  enable_dynamic_obstacles: true
+  num_dynamic_obstacles: 3
+  obstacle_motion_modes:
+    - pedestrian_like
+    - back_and_forth
+    - random_rigid_body
+  obstacle_radius: 0.35
+  obstacle_speed: 0.45
+  obstacle_collision_distance: 0.60
+  obstacle_amplitude_scale: 0.62
+  obstacle_amplitude_min: 0.35
+  obstacle_amplitude_max: 1.50
+  phase_randomization: true
+  include_dynamic_obstacle_state: true
+  dynamic_obstacle_state_k: 3
+  ttc_horizon: 3.0
+  path_block_distance: 3.2
+  path_block_width: 1.05
+  path_block_ttc: 3.2
+  path_block_rise: 0.25
+  path_block_fall: 0.05
+  path_block_threshold: 0.40
+  preferred_speed: 0.54
+  wait_speed: 0.08
+  ttc_safe_distance: 0.62
+  blocked_timeout: 2.2
+
+reward:
+  progress: 6.0
+  preferred_velocity: 2.6
+  dynamic_ttc: -6.2
+  dynamic_clearance: -3.0
+  wait: 1.4
+  blocked_fast_penalty: -2.0
+  detour: -0.45
+  near_goal_stop: 2.0
+  dynamic_collision: -150.0
+  progress_blocked_scale: 0.10
+  progress_near_goal_scale: 0.15
+  preferred_sigma: 0.45
+  ttc_min_closing_speed: 0.03
+  clearance_safe_distance: 1.30
+  clearance_front_margin: -0.15
+  wait_max_speed: 0.12
+  wait_heading_weight: 1.0
+  wait_timeout_decay: 0.20
+  blocked_fast_speed_threshold: 0.18
+  blocked_fast_ttc_threshold: 2.0
+  blocked_fast_closing_speed_threshold: 0.05
+  detour_lateral_weight: 1.0
+  detour_yaw_weight: 0.5
+  detour_blocked_scale: 0.04
+  detour_timeout_scale: 0.22
+  near_goal_distance: 0.60
+  near_goal_speed: 0.03
+  near_goal_max_speed: 0.10
+  near_goal_max_yaw_rate: 0.35
+
+training:
+  task_name: go2_dynamic_obstacles
+  experiment_name: Go2_dynamic_obstacles_obs
+  algorithm: ppo
+  seed: 42
+  max_iterations: 4000
+  num_envs: 768
+  headless: true
+  reset_optimizer: false
+
+evaluation:
+  experiment_name: Go2_dynamic_obstacles_obs
+  num_envs: 1
+  headless: false
+  total_episodes: 10
+
+recording:
+  experiment_name: Go2_dynamic_obstacles_obs
+  num_envs: 1
+  headless: true
+  video_length: 3000
+  total_episodes: 3
+
+outputs:
+  log_dir: logs/navigation/dynamic_obstacles_obs_stageC_three_random
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_obs_stageC_three_random
+  video_dir: outputs/videos/navigation/dynamic_obstacles_obs_stageC_three_random
+  metrics_path: outputs/metrics/navigation_dynamic_obstacles_obs_stageC_three_random.json

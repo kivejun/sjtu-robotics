@@ -26,13 +26,36 @@ class Stage:
     max_iterations: int
 
 
-STAGES = [
+OBS_STAGES = [
     Stage("stage0_static_obs", "tasks/navigation/configs/dynamic_obstacles_obs_stage0_static.yaml", 4000),
     Stage("stage1_single_pedestrian", "tasks/navigation/configs/dynamic_obstacles_obs_stage1.yaml", 6000),
     Stage("stage2_wait_single", "tasks/navigation/configs/dynamic_obstacles_obs_stage2_wait.yaml", 3000),
     Stage("stage2_two_obstacles", "tasks/navigation/configs/dynamic_obstacles_obs_stage2_two.yaml", 3000),
     Stage("stage3_three_obstacles", "tasks/navigation/configs/dynamic_obstacles_obs_stage3.yaml", 4000),
 ]
+
+THREE_OBSTACLE_CURRICULUM_STAGES = [
+    Stage(
+        "stageA_three_low_speed",
+        "tasks/navigation/configs/dynamic_obstacles_obs_stageA_three_low_speed.yaml",
+        2000,
+    ),
+    Stage(
+        "stageB_three_standard",
+        "tasks/navigation/configs/dynamic_obstacles_obs_stageB_three_standard.yaml",
+        3000,
+    ),
+    Stage(
+        "stageC_three_random",
+        "tasks/navigation/configs/dynamic_obstacles_obs_stageC_three_random.yaml",
+        4000,
+    ),
+]
+
+STAGE_PLANS = {
+    "obs_full": OBS_STAGES,
+    "three_obstacle_curriculum": THREE_OBSTACLE_CURRICULUM_STAGES,
+}
 
 
 def list_runs() -> set[str]:
@@ -209,18 +232,27 @@ def run_stage(stage: Stage, checkpoint: Path | None, log_dir: Path, resume_to_st
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Train navigation dynamic-obstacle stages sequentially.")
+    parser.add_argument(
+        "--plan",
+        choices=sorted(STAGE_PLANS),
+        default="obs_full",
+        help="Stage plan to execute.",
+    )
     parser.add_argument("--start-stage", type=int, default=0)
-    parser.add_argument("--end-stage", type=int, default=len(STAGES) - 1)
+    parser.add_argument("--end-stage", type=int, default=None)
     parser.add_argument("--checkpoint", type=Path, default=None)
     args = parser.parse_args()
+    stages = STAGE_PLANS[args.plan]
+    end_stage = len(stages) - 1 if args.end_stage is None else args.end_stage
 
     log_dir = REPO_ROOT / "outputs" / "logs" / "navigation" / "dynamic_obstacles_multistage"
     log_dir.mkdir(parents=True, exist_ok=True)
 
     checkpoint = args.checkpoint
     completed: list[tuple[str, Path]] = []
-    for idx, stage in enumerate(STAGES):
-        if idx < args.start_stage or idx > args.end_stage:
+    print(f"[stage-plan] {args.plan}")
+    for idx, stage in enumerate(stages):
+        if idx < args.start_stage or idx > end_stage:
             continue
         checkpoint = run_stage(
             stage,

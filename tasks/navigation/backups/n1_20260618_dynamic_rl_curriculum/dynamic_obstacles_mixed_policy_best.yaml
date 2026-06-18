@@ -1,0 +1,101 @@
+task:
+  name: navigation/dynamic_obstacles
+  family: navigation
+  backend: sea_nav_modified_or_isaaclab
+
+external_repo:
+  path: external/SEA-Nav-Code
+  note: >
+    Current best N1 engineering baseline backup. This uses the original
+    SEA-Nav navigation baseline policy without explicit dynamic-obstacle
+    observation, plus a low-intervention TTC/VO-style DMA hybrid safety filter.
+    Keep this file unchanged as the rollback/reference policy while developing
+    RL high-risk avoidance.
+
+runtime:
+  conda_env: sea_nav
+
+environment:
+  scene: dynamic_obstacles_mixed_policy_best
+  goal_randomization: true
+  enable_dynamic_obstacles: true
+  num_dynamic_obstacles: 3
+  obstacle_motion_modes:
+    - pedestrian_like
+    - back_and_forth
+    - random_rigid_body
+  obstacle_radius: 0.35
+  obstacle_speed: 0.45
+  obstacle_collision_distance: 0.60
+  obstacle_amplitude_scale: 0.55
+  obstacle_amplitude_min: 0.35
+  obstacle_amplitude_max: 1.35
+  include_dynamic_obstacle_state: false
+  dynamic_obstacle_state_k: 3
+  ttc_horizon: 3.0
+  path_block_distance: 3.0
+  path_block_width: 0.95
+  path_block_ttc: 3.0
+  path_block_rise: 0.25
+  path_block_fall: 0.05
+  path_block_threshold: 0.40
+  preferred_speed: 0.50
+  wait_speed: 0.00
+  ttc_safe_distance: 0.60
+  blocked_timeout: 3.0
+
+pipeline:
+  controller: hybrid_safety_filter
+  hybrid_simple_speed_filter: 1
+  hybrid_soft_scale: 0.85
+  hybrid_safe_distance: 0.62
+  hybrid_critical_distance: 0.48
+  hybrid_ttc_horizon: 1.6
+  hybrid_stop_ttc: 0.45
+  hybrid_slow_ttc: 0.85
+  hybrid_dynamic_rollout_horizon: 2.2
+  hybrid_crossing_window_horizon: 1.7
+  hybrid_static_rollout_horizon: 0.8
+  hybrid_rollout_dt: 0.15
+  hybrid_crossing_commit_time: 1.9
+  hybrid_max_wait_time: 1.6
+  hybrid_crossing_speed: 0.42
+  hybrid_robot_radius: 0.30
+  hybrid_front_ray_clearance: 0.28
+  hybrid_max_lateral_speed: 0.30
+  hybrid_escape_yaw_rate: 0.45
+  hybrid_policy_weight: 24.0
+  hybrid_progress_weight: 0.8
+  hybrid_ttc_weight: 3.5
+  hybrid_clearance_weight: 1.2
+  hybrid_static_weight: 0.6
+  hybrid_wait_bonus: 0.0
+  hybrid_smoothness_weight: 0.25
+
+training:
+  task_name: go2_dynamic_obstacles
+  experiment_name: Go2_pos_rough
+  algorithm: sea_nav_baseline_policy_plus_dma_hybrid_safety_filter
+  seed: 42
+  max_iterations: 0
+  num_envs: 1
+  headless: true
+
+evaluation:
+  experiment_name: Go2_pos_rough
+  num_envs: 1
+  headless: false
+  total_episodes: 999999
+
+recording:
+  experiment_name: Go2_pos_rough
+  num_envs: 1
+  headless: true
+  video_length: 3000
+  total_episodes: 3
+
+outputs:
+  log_dir: logs/navigation/dynamic_obstacles_mixed_policy_best
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_mixed_policy_best
+  video_dir: outputs/videos/navigation/dynamic_obstacles_mixed_policy_best
+  metrics_path: outputs/metrics/navigation_dynamic_obstacles_mixed_policy_best.json
