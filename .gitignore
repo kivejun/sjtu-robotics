@@ -66,4 +66,6 @@ external/**/logs/
 external/**/wandb/
 
 # Local external repositories
+external/IsaacLab/
+external/robot_lab/
 third_party/
