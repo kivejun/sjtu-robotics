@@ -70,6 +70,8 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
     for cfg_key, env_key in policy_mapping.items():
         if cfg_key in policy_cfg:
             env[env_key] = str(policy_cfg[cfg_key])
+    if "dynamic_global_dim" in policy_cfg:
+        env["SEA_NAV_DYNAMIC_OBS_GLOBAL_DIM"] = str(policy_cfg["dynamic_global_dim"])
 
     mapping = {
         "enable_dynamic_obstacles": "SEA_NAV_DYNAMIC_ENABLE",

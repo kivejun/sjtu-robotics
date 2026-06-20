@@ -855,16 +855,18 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
 
         dynamic_risk = self._dynamic_risk_weight()
         closing_scale = max(vel_scale, 1.0e-3)
-        global_flags = torch.stack(
-            (
+        global_dim = int(getattr(self.cfg.env, "dynamic_obstacle_global_dim", 5))
+        base_global = [
                 self.dynamic_path_blocked.float(),
                 (self.dynamic_nearest_distance / max_dist).clamp(min=0.0, max=1.0),
                 dynamic_risk,
                 (self.dynamic_min_ttc_closing_speed / closing_scale).clamp(min=0.0, max=2.0),
                 (self.dynamic_min_ttc / horizon).clamp(min=0.0, max=1.0),
-            ),
-            dim=-1,
-        )
+        ]
+        global_flags = torch.stack(base_global[:global_dim], dim=-1)
+        if global_flags.shape[-1] < global_dim:
+            pad = torch.zeros(self.num_envs, global_dim - global_flags.shape[-1], device=self.device)
+            global_flags = torch.cat((global_flags, pad), dim=-1)
         return torch.cat((per_obstacle.reshape(self.num_envs, -1), global_flags), dim=-1)
 
     def compute_observations(self):

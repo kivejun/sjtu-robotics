@@ -79,9 +79,32 @@ def resolve_policy_checkpoint(train_cfg, load_run, checkpoint):
     )
 
 
+def _infer_policy_from_state_dict(model_state_dict, default_policy_name, policy_cfg):
+    policy_cfg = dict(policy_cfg)
+    policy_name = default_policy_name
+    if "dynamic_cls_token" in model_state_dict:
+        policy_name = "TransformerActorCritic"
+        policy_cfg["transformer_dim"] = int(model_state_dict["dynamic_cls_token"].shape[-1])
+        policy_cfg["dynamic_token_dim"] = int(model_state_dict["dynamic_token_proj.weight"].shape[-1])
+        policy_cfg["transformer_layers"] = len(
+            {
+                key.split(".")[2]
+                for key in model_state_dict
+                if key.startswith("dynamic_encoder.layers.")
+            }
+        )
+    return policy_name, policy_cfg
+
+
 def load_inference_policy_from_checkpoint(env, train_cfg, checkpoint_path, num_dynamic_obstacle_obs):
     train_cfg_dict = class_to_dict(train_cfg)
-    policy_name = train_cfg_dict["runner"]["policy_class_name"]
+    loaded = torch.load(checkpoint_path, map_location=env.device)
+    model_state_dict = loaded["model_state_dict"]
+    policy_name, policy_cfg = _infer_policy_from_state_dict(
+        model_state_dict,
+        train_cfg_dict["runner"]["policy_class_name"],
+        train_cfg_dict["policy"],
+    )
     policy_class = POLICY_CLASSES.get(policy_name)
     if policy_class is None:
         raise ValueError(f"Unsupported policy class for manual loading: {policy_name}")
@@ -91,12 +114,14 @@ def load_inference_policy_from_checkpoint(env, train_cfg, checkpoint_path, num_d
         his_len=env.cfg.env.his_len,
         num_rays=env.rays.shape[1],
         num_dynamic_obstacle_obs=num_dynamic_obstacle_obs,
-        **train_cfg_dict["policy"],
+        **policy_cfg,
     ).to(env.device)
-    loaded = torch.load(checkpoint_path, map_location=env.device)
-    actor_critic.load_state_dict(loaded["model_state_dict"])
+    actor_critic.load_state_dict(model_state_dict)
     actor_critic.eval()
-    print(f"Loaded manual policy from: {checkpoint_path} (dynamic_obs_dim={num_dynamic_obstacle_obs})")
+    print(
+        f"Loaded manual {policy_name} policy from: "
+        f"{checkpoint_path} (dynamic_obs_dim={num_dynamic_obstacle_obs})"
+    )
     return actor_critic.act_inference
 
 

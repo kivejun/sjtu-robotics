@@ -54,9 +54,14 @@ class Go2DynamicObstaclesCfg(Go2PosRoughCfg):
         episode_length_s = _env_float("SEA_NAV_ENV_EPISODE_LENGTH_S", Go2PosRoughCfg.env.episode_length_s)
         include_dynamic_obstacle_state = _env_bool("SEA_NAV_DYNAMIC_OBS_STATE", False)
         dynamic_obstacle_state_k = _env_int("SEA_NAV_DYNAMIC_OBS_K", 3)
-        dynamic_obstacle_global_dim = _env_int("SEA_NAV_DYNAMIC_OBS_GLOBAL_DIM", 2)
+        dynamic_obstacle_global_dim = _env_int(
+            "SEA_NAV_DYNAMIC_OBS_GLOBAL_DIM",
+            _env_int("SEA_NAV_POLICY_DYNAMIC_GLOBAL_DIM", 2),
+        )
         num_dynamic_obstacle_obs = (
-            dynamic_obstacle_state_k * 6 + dynamic_obstacle_global_dim if include_dynamic_obstacle_state else 0
+            dynamic_obstacle_state_k * 6 + dynamic_obstacle_global_dim
+            if include_dynamic_obstacle_state
+            else 0
         )
         num_obs_one_step = (
             Go2PosRoughCfg.env.num_props

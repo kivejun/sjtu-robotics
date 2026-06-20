@@ -83,10 +83,17 @@ pipeline:
   hybrid_static_weight: 0.6
   hybrid_wait_bonus: 0.0
   hybrid_smoothness_weight: 0.25
-  emergency_policy_checkpoint: /home/kivejun/sjtu-robotics/external/SEA-Nav-Code/training/legged_gym/logs/Go2_dynamic_avoidance_stage1_encouraged/06_05_00-33-34_/model_2500.pt
+  emergency_policy_checkpoint: /home/kivejun/sjtu-robotics/model_310.pt
   emergency_policy_blend: 0.75
   emergency_policy_trigger_distance: 0.5
   emergency_policy_trigger_ttc: 0.45
+policy:
+  transformer_dim: 48
+  transformer_heads: 4
+  transformer_layers: 1
+  transformer_dropout: 0.0
+  dynamic_token_dim: 6
+  dynamic_global_dim: 5
 training:
   task_name: go2_dynamic_obstacles
   experiment_name: Go2_pos_rough
