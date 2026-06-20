@@ -39,6 +39,7 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
         self.dynamic_obstacle_amp = torch.ones(self.num_envs, self.num_dynamic_obstacles, device=self.device)
         self.dynamic_obstacle_phase = torch.zeros(self.num_envs, self.num_dynamic_obstacles, device=self.device)
         self.dynamic_obstacle_omega = torch.ones(self.num_envs, self.num_dynamic_obstacles, device=self.device)
+        self.dynamic_obstacle_activation_time = torch.zeros(self.num_envs, self.num_dynamic_obstacles, device=self.device)
         self.dynamic_collision_count = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
         self.dynamic_collision_step = torch.zeros(self.num_envs, device=self.device)
         self.min_dynamic_obstacle_distance = torch.ones(self.num_envs, device=self.device) * 100.0
@@ -53,8 +54,10 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
         self.prev_dynamic_nearest_distance = torch.ones(self.num_envs, device=self.device) * 100.0
         self.prev_dynamic_min_ttc = torch.ones(self.num_envs, device=self.device) * 100.0
         self.avoidance_had_high_risk = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        self.avoidance_moved = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
         self.avoidance_success_latched = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
         self.prev_nav_actions_after_clip = torch.zeros(self.num_envs, 3, device=self.device)
+        self.prev_rebot_foot_contact_z = torch.zeros(self.num_envs, len(self.feet_indices), device=self.device)
         self.dynamic_path_blocked = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
         self.dynamic_path_block_score = torch.zeros(self.num_envs, device=self.device)
         self.dynamic_path_block_time = torch.zeros(self.num_envs, device=self.device)
@@ -89,6 +92,7 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
         self.prev_dynamic_nearest_distance[env_ids] = 100.0
         self.prev_dynamic_min_ttc[env_ids] = 100.0
         self.avoidance_had_high_risk[env_ids] = False
+        self.avoidance_moved[env_ids] = False
         self.avoidance_success_latched[env_ids] = False
         self.dynamic_path_blocked[env_ids] = False
         self.dynamic_path_block_score[env_ids] = 0.0
@@ -452,8 +456,9 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
             path_lateral_jitter = float(getattr(cfg, "training_interaction_obstacle_lateral_jitter", 0.0))
 
             for obs_idx, mode in enumerate(self.cfg.dynamic_obstacles.motion_modes[: self.num_dynamic_obstacles]):
-                focus_near_robot = bool(getattr(cfg, "focus_near_robot", False)) and obs_idx == 0
-                if force_path_obstacles:
+                focus_all_obstacles = bool(getattr(cfg, "focus_all_obstacles", False))
+                focus_near_robot = bool(getattr(cfg, "focus_near_robot", False)) and (focus_all_obstacles or obs_idx == 0)
+                if force_path_obstacles and not (focus_near_robot and focus_all_obstacles):
                     if obs_idx < len(path_fracs):
                         frac = float(path_fracs[obs_idx])
                     else:
@@ -476,14 +481,33 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
                     else:
                         motion_world = 0.65 * axis + 0.35 * perp
                 elif focus_near_robot:
-                    front_min = float(getattr(cfg, "focus_distance_min", 0.90))
-                    front_max = float(getattr(cfg, "focus_distance_max", 1.40))
-                    lateral_min = float(getattr(cfg, "focus_lateral_min", 0.25))
-                    lateral_max = float(getattr(cfg, "focus_lateral_max", 0.75))
+                    if mode == "delayed_static":
+                        front_min = float(getattr(cfg, "delayed_static_distance_min", getattr(cfg, "focus_distance_min", 0.90)))
+                        front_max = float(getattr(cfg, "delayed_static_distance_max", getattr(cfg, "focus_distance_max", 1.40)))
+                        lateral_min = float(getattr(cfg, "delayed_static_lateral_min", getattr(cfg, "focus_lateral_min", 0.25)))
+                        lateral_max = float(getattr(cfg, "delayed_static_lateral_max", getattr(cfg, "focus_lateral_max", 0.75)))
+                    else:
+                        front_min = float(getattr(cfg, "focus_distance_min", 0.90))
+                        front_max = float(getattr(cfg, "focus_distance_max", 1.40))
+                        lateral_min = float(getattr(cfg, "focus_lateral_min", 0.25))
+                        lateral_max = float(getattr(cfg, "focus_lateral_max", 0.75))
                     front_dist = np.random.uniform(front_min, front_max)
-                    lateral = np.random.choice([-1.0, 1.0]) * np.random.uniform(lateral_min, lateral_max)
+                    if focus_all_obstacles:
+                        front_span = max(front_max - front_min, 1.0e-3)
+                        front_alpha = (obs_idx + 0.5) / max(self.num_dynamic_obstacles, 1)
+                        front_dist = front_min + front_span * np.clip(front_alpha + np.random.uniform(-0.12, 0.12), 0.0, 1.0)
+                        lateral_sign = -1.0 if obs_idx % 2 == 0 else 1.0
+                    else:
+                        lateral_sign = np.random.choice([-1.0, 1.0])
+                    lateral = lateral_sign * np.random.uniform(lateral_min, lateral_max)
                     desired_world = start + front_dist * axis + lateral * perp
-                    motion_world = perp
+                    if mode == "pedestrian_like":
+                        motion_world = perp
+                    elif mode == "back_and_forth":
+                        motion_world = axis
+                    else:
+                        diag_sign = -1.0 if obs_idx % 2 == 0 else 1.0
+                        motion_world = 0.65 * axis + diag_sign * 0.35 * perp
                 else:
                     frac = 0.35 + 0.18 * obs_idx
                     offset = (obs_idx - (self.num_dynamic_obstacles - 1) * 0.5) * 9.0
@@ -538,6 +562,8 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
 
                 if mode == "back_and_forth":
                     motion_clear = min(motion_clear, perp_clear / max(self.BACKTRACK_LATERAL_SCALE, 1e-3))
+                elif mode == "delayed_static":
+                    motion_clear = max(motion_clear, 1.0)
                 elif mode == "random_rigid_body":
                     motion_clear = min(
                         motion_clear,
@@ -601,8 +627,16 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
                     phase = torch.rand(1, device=self.device).item() * 2.0 * math.pi
                 else:
                     phase = obs_idx * 2.0 * math.pi / max(1, self.num_dynamic_obstacles)
+                if mode == "delayed_static":
+                    activation_min = float(getattr(cfg, "delayed_static_activation_min", 0.45))
+                    activation_max = float(getattr(cfg, "delayed_static_activation_max", 1.10))
+                    phase = 0.0
+                    self.dynamic_obstacle_activation_time[env_idx, obs_idx] = np.random.uniform(activation_min, activation_max)
+                    self.dynamic_obstacle_omega[env_idx, obs_idx] = 0.0
+                else:
+                    self.dynamic_obstacle_activation_time[env_idx, obs_idx] = 0.0
+                    self.dynamic_obstacle_omega[env_idx, obs_idx] = speed / max(amp_world, 0.3)
                 self.dynamic_obstacle_phase[env_idx, obs_idx] = phase
-                self.dynamic_obstacle_omega[env_idx, obs_idx] = speed / max(amp_world, 0.3)
 
         self._update_dynamic_obstacles(env_ids=env_ids, force=True)
         self.dynamic_collision_count[env_ids] = 0
@@ -622,7 +656,13 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
         phase = self.dynamic_obstacle_phase[env_ids] + t[:, None] * self.dynamic_obstacle_omega[env_ids]
 
         for obs_idx, mode in enumerate(self.cfg.dynamic_obstacles.motion_modes[: self.num_dynamic_obstacles]):
-            if mode == "pedestrian_like":
+            if mode == "delayed_static":
+                active = t >= self.dynamic_obstacle_activation_time[env_ids, obs_idx]
+                pos = self.dynamic_obstacle_base[env_ids, obs_idx].clone()
+                far_pos = torch.ones_like(pos) * 1.0e6
+                pos = torch.where(active[:, None], pos, far_pos)
+                vel = torch.zeros_like(pos)
+            elif mode == "pedestrian_like":
                 move_axis = self.dynamic_obstacle_perp[env_ids, obs_idx]
                 phase_i = phase[:, obs_idx].unsqueeze(1)
                 amp = self.dynamic_obstacle_amp[env_ids, obs_idx].unsqueeze(1)
@@ -746,6 +786,21 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
             torch.zeros_like(self.dynamic_path_block_time),
         )
 
+    def _smoothstep(self, x):
+        x = x.clamp(min=0.0, max=1.0)
+        return x * x * (3.0 - 2.0 * x)
+
+    def _dynamic_risk_weight(self):
+        avoid_cfg = self.cfg.rewards.avoidance_stage1_config
+        high_dist = max(float(getattr(avoid_cfg, "high_risk_distance", 1.05)), 1.0e-3)
+        low_dist = max(float(getattr(avoid_cfg, "low_risk_distance", 1.35)), high_dist + 1.0e-3)
+        low_ttc = max(float(getattr(avoid_cfg, "low_risk_ttc", 2.50)), 1.0e-3)
+
+        distance_risk = self._smoothstep((low_dist - self.dynamic_nearest_distance) / (low_dist - high_dist))
+        approaching = self.dynamic_min_ttc_closing_speed > 0.05
+        ttc_risk = self._smoothstep((low_ttc - self.dynamic_min_ttc) / low_ttc) * approaching.float()
+        return torch.maximum(distance_risk, ttc_risk).clamp(min=0.0, max=1.0)
+
     def _get_dynamic_obstacle_state_obs(self):
         k = int(getattr(self.cfg.env, "dynamic_obstacle_state_k", 3))
         if k <= 0:
@@ -798,10 +853,15 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
             pad = torch.zeros(self.num_envs, k - take, 6, device=self.device)
             per_obstacle = torch.cat((per_obstacle, pad), dim=1)
 
+        dynamic_risk = self._dynamic_risk_weight()
+        closing_scale = max(vel_scale, 1.0e-3)
         global_flags = torch.stack(
             (
                 self.dynamic_path_blocked.float(),
                 (self.dynamic_nearest_distance / max_dist).clamp(min=0.0, max=1.0),
+                dynamic_risk,
+                (self.dynamic_min_ttc_closing_speed / closing_scale).clamp(min=0.0, max=2.0),
+                (self.dynamic_min_ttc / horizon).clamp(min=0.0, max=1.0),
             ),
             dim=-1,
         )
@@ -950,8 +1010,10 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
         self.prev_dynamic_nearest_distance[env_ids] = 100.0
         self.prev_dynamic_min_ttc[env_ids] = 100.0
         self.avoidance_had_high_risk[env_ids] = False
+        self.avoidance_moved[env_ids] = False
         self.avoidance_success_latched[env_ids] = False
         self.prev_nav_actions_after_clip[env_ids] = 0.0
+        self.prev_rebot_foot_contact_z[env_ids] = self.contact_forces[env_ids][:, self.feet_indices, 2]
         self.dynamic_path_block_score[env_ids] = 0.0
         self.dynamic_path_block_time[env_ids] = 0.0
         self._update_dynamic_obstacle_features()
@@ -1073,6 +1135,63 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
     def _reward_dynamic_collision(self):
         return self.dynamic_collision_step
 
+    def _reward_rebot_distance(self):
+        cfg = self.cfg.rewards.rebot_distance_config
+        sigma = max(float(getattr(cfg, "sigma", 0.35)), 1.0e-3)
+        collision_distance = max(float(getattr(cfg, "collision_distance", self.dynamic_collision_distance)), 1.0e-3)
+        clearance = (self.dynamic_nearest_distance - collision_distance).clamp(min=0.0)
+        return torch.exp(-clearance / sigma)
+
+    def _reward_rebot_collision(self):
+        return self.dynamic_collision_step
+
+    def _reward_rebot_walk(self):
+        cfg = self.cfg.rewards.rebot_walk_config
+        threshold = float(getattr(cfg, "contact_threshold", 1.0))
+        contacts = self.contact_forces[:, self.feet_indices, 2] > threshold
+        if contacts.shape[1] < 4:
+            return torch.zeros(self.num_envs, device=self.device)
+        first_pair = (contacts[:, 0] == contacts[:, 3]).float()
+        second_pair = (contacts[:, 1] == contacts[:, 2]).float()
+        return 0.5 * (first_pair + second_pair)
+
+    def _reward_rebot_energy(self):
+        cfg = self.cfg.rewards.rebot_energy_config
+        scale = max(float(getattr(cfg, "scale", 50.0)), 1.0e-3)
+        power = torch.sum(torch.abs(self.torques) * torch.abs(self.dof_vel), dim=1)
+        return power / scale
+
+    def _reward_rebot_contact(self):
+        cfg = self.cfg.rewards.rebot_contact_config
+        force_scale = max(float(getattr(cfg, "force_scale", 100.0)), 1.0e-3)
+        contact_z = self.contact_forces[:, self.feet_indices, 2]
+        delta = (contact_z - self.prev_rebot_foot_contact_z) / force_scale
+        self.prev_rebot_foot_contact_z[:] = contact_z
+        return torch.sum(torch.square(delta), dim=1)
+
+    def _reward_rebot_diversity(self):
+        actions = self.nav_actions_after_clip
+        if actions.shape[0] <= 1:
+            return torch.zeros(self.num_envs, device=self.device)
+        action_var = torch.mean(torch.var(actions, dim=0, unbiased=False))
+        return torch.ones(self.num_envs, device=self.device) * action_var
+
+    def _reward_rebot_threat(self):
+        cfg = self.cfg.rewards.rebot_threat_config
+        lam = float(getattr(cfg, "lambda_speed", 0.45))
+        eta = float(getattr(cfg, "eta", 1.1))
+        sigma = max(float(getattr(cfg, "sigma", 0.45)), 1.0e-3)
+        horizon = max(float(getattr(self.cfg.dynamic_obstacles, "ttc_horizon", 3.0)), 1.0e-3)
+        reaction_time = self.dynamic_min_ttc.clamp(min=0.0, max=horizon)
+        threat_speed = lam * torch.exp(-eta * reaction_time)
+        desired_vel = self._nearest_obstacle_away_dir_local() * threat_speed.unsqueeze(1)
+        err = torch.norm(self.base_lin_vel[:, :2] - desired_vel, dim=-1)
+        return err / sigma
+
+    def _reward_rebot_direction(self):
+        toward_dir = -self._nearest_obstacle_away_dir_local()
+        return torch.sum(self.base_lin_vel[:, :2] * toward_dir, dim=-1)
+
     def _stage1_high_risk(self):
         cfg = self.cfg.rewards.avoidance_stage1_config
         high_dist = float(getattr(cfg, "high_risk_distance", 1.05))
@@ -1094,20 +1213,53 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
         return torch.min(rays, dim=1).values > min_clearance
 
     def _reward_successful_avoidance(self):
+        cfg = self.cfg.rewards.avoidance_stage1_config
+        free_cfg = self.cfg.rewards.free_space_action_config
         high_risk = self._stage1_high_risk()
         self.avoidance_had_high_risk |= high_risk
+
+        static_clear = self._stage1_static_clearance()
+        speed_threshold = float(getattr(free_cfg, "speed_threshold", 0.08))
+        moved = torch.norm(self.base_lin_vel[:, :2], dim=-1) > speed_threshold
+        self.avoidance_moved |= self.avoidance_had_high_risk & static_clear & moved
+
+        high_dist = float(getattr(cfg, "high_risk_distance", 1.05))
+        high_ttc = float(getattr(cfg, "high_risk_ttc", 1.30))
+        approaching = self.dynamic_min_ttc_closing_speed > 0.05
+        distance_recovered = self.dynamic_nearest_distance > high_dist
+        ttc_recovered = (~approaching) | (self.dynamic_min_ttc > high_ttc)
+        low_risk_relieved = self._stage1_low_risk()
+        partial_relieved = distance_recovered | ttc_recovered
+        full_relieved = low_risk_relieved | (distance_recovered & ttc_recovered)
+
         no_dynamic_collision = self.dynamic_collision_step < 0.5
         no_static_collision = ~getattr(self, "last_collision_active", torch.zeros_like(high_risk))
-        success = (
+        eligible = (
             self.avoidance_had_high_risk
-            & self._stage1_low_risk()
-            & self._stage1_static_clearance()
+            & self.avoidance_moved
+            & static_clear
             & no_dynamic_collision
             & no_static_collision
             & (~self.avoidance_success_latched)
         )
+        partial_success = eligible & partial_relieved
+        full_success = eligible & full_relieved
+        success = partial_success | full_success
         self.avoidance_success_latched |= success
-        return success.float()
+        return torch.where(full_success, torch.ones_like(self.dynamic_nearest_distance), 0.4 * partial_success.float())
+
+    def _reward_avoidance_clearance(self):
+        cfg = self.cfg.rewards.avoidance_clearance_config
+        safe_distance = max(float(getattr(cfg, "safe_distance", 1.10)), self.dynamic_collision_distance + 1.0e-3)
+        collision_distance = max(float(getattr(cfg, "collision_distance", self.dynamic_collision_distance)), 1.0e-3)
+        static_clearance = float(getattr(cfg, "min_static_clearance", 0.35))
+        risk_weight = self._dynamic_risk_weight()
+        clearance_score = self._smoothstep(
+            (self.dynamic_nearest_distance - collision_distance) / max(safe_distance - collision_distance, 1.0e-3)
+        )
+        rays = getattr(self, "static_rays", self.rays)
+        static_clear = torch.min(rays, dim=1).values > static_clearance
+        return risk_weight * clearance_score * static_clear.float()
 
     def _reward_risk_reduction(self):
         cfg = self.cfg.rewards.risk_reduction_config
@@ -1117,12 +1269,12 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
         high_dist = max(float(getattr(avoid_cfg, "high_risk_distance", 1.05)), 1e-3)
         low_ttc = max(float(getattr(avoid_cfg, "low_risk_ttc", 2.50)), 1e-3)
 
-        was_relevant = self.avoidance_had_high_risk | self._stage1_high_risk()
+        risk_weight = torch.maximum(self._dynamic_risk_weight(), (self.prev_dynamic_nearest_distance < high_dist).float())
         dist_gain = ((self.dynamic_nearest_distance - self.prev_dynamic_nearest_distance) / high_dist).clip(min=0.0, max=1.0)
         prev_ttc = self.prev_dynamic_min_ttc.clamp(max=low_ttc)
         curr_ttc = self.dynamic_min_ttc.clamp(max=low_ttc)
         ttc_gain = ((curr_ttc - prev_ttc) / low_ttc).clip(min=0.0, max=1.0)
-        return was_relevant.float() * (dist_weight * dist_gain + ttc_weight * ttc_gain)
+        return risk_weight * (dist_weight * dist_gain + ttc_weight * ttc_gain)
 
     def _reward_free_space_action(self):
         cfg = self.cfg.rewards.free_space_action_config
@@ -1132,9 +1284,7 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
         static_clear = torch.min(rays, dim=1).values > safe_distance
         planar_speed = torch.norm(self.base_lin_vel[:, :2], dim=-1)
         moved = planar_speed > speed_threshold
-        # This reward deliberately ignores goal direction: Stage 1 first learns
-        # to escape dynamic risk into a static-safe free space.
-        return static_clear.float() * moved.float() * (self._stage1_high_risk() | self.avoidance_had_high_risk).float()
+        return static_clear.float() * moved.float() * self._dynamic_risk_weight()
 
     def _reward_unsafe_ttc(self):
         cfg = self.cfg.rewards.unsafe_ttc_config
@@ -1153,6 +1303,57 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
     def _reward_static_collision(self):
         return super()._reward_collision()
 
+    def _nearest_obstacle_away_dir_local(self):
+        rel = self.dynamic_nearest_rel_pos_local[:, :2]
+        norm = torch.norm(rel, dim=-1, keepdim=True).clamp(min=1.0e-4)
+        return -rel / norm
+
+    def _reward_escape_direction(self):
+        cfg = self.cfg.rewards.escape_direction_config
+        away_dir = self._nearest_obstacle_away_dir_local()
+        vel = self.base_lin_vel[:, :2]
+        speed_sigma = max(float(getattr(cfg, "speed_sigma", 0.45)), 1.0e-3)
+        away_speed = torch.sum(vel * away_dir, dim=-1).clamp(min=0.0)
+        score = torch.tanh(away_speed / speed_sigma)
+        return score * self._dynamic_risk_weight()
+
+    def _reward_threat_direction_penalty(self):
+        cfg = self.cfg.rewards.threat_direction_penalty_config
+        toward_dir = -self._nearest_obstacle_away_dir_local()
+        vel = self.base_lin_vel[:, :2]
+        speed_sigma = max(float(getattr(cfg, "speed_sigma", 0.45)), 1.0e-3)
+        toward_speed = torch.sum(vel * toward_dir, dim=-1).clamp(min=0.0)
+        penalty = torch.tanh(toward_speed / speed_sigma)
+        return penalty * self._dynamic_risk_weight()
+
+    def _reward_stable_velocity(self):
+        cfg = self.cfg.rewards.stable_velocity_config
+        max_speed = max(float(getattr(cfg, "max_speed", 0.18)), 1.0e-3)
+        max_yaw_rate = max(float(getattr(cfg, "max_yaw_rate", 0.35)), 1.0e-3)
+        planar_speed = torch.norm(self.base_lin_vel[:, :2], dim=-1)
+        yaw_rate = torch.abs(self.base_ang_vel[:, 2])
+        return torch.exp(-torch.square(planar_speed / max_speed)) * torch.exp(-torch.square(yaw_rate / max_yaw_rate))
+
+    def _reward_resume_ready(self):
+        cfg = self.cfg.rewards.resume_ready_config
+        min_dynamic_distance = float(getattr(cfg, "min_dynamic_distance", 1.35))
+        min_ttc = float(getattr(cfg, "min_ttc", 2.50))
+        min_static_clearance = float(getattr(cfg, "min_static_clearance", 0.55))
+        max_speed = max(float(getattr(cfg, "max_speed", 0.22)), 1.0e-3)
+        max_yaw_rate = max(float(getattr(cfg, "max_yaw_rate", 0.40)), 1.0e-3)
+        heading_weight = float(getattr(cfg, "heading_weight", 0.35))
+
+        rays = getattr(self, "static_rays", self.rays)
+        static_clear = torch.min(rays, dim=1).values > min_static_clearance
+        dynamic_clear = self.dynamic_nearest_distance > min_dynamic_distance
+        ttc_clear = self.dynamic_min_ttc > min_ttc
+        planar_speed = torch.norm(self.base_lin_vel[:, :2], dim=-1)
+        yaw_rate = torch.abs(self.base_ang_vel[:, 2])
+        stable = (planar_speed < max_speed) & (yaw_rate < max_yaw_rate)
+        goal_alignment = (self.goal_local_pos[:, 0] / (self.distance + 1.0e-4)).clamp(min=0.0, max=1.0)
+        ready = self.avoidance_had_high_risk & dynamic_clear & ttc_clear & static_clear & stable
+        return ready.float() * (1.0 + heading_weight * goal_alignment)
+
     def _draw_dynamic_obstacles_vis(self):
         env_idx = 0
         base_z = float(self.root_states[env_idx, 2].detach().cpu().item() + 0.42)
@@ -1161,6 +1362,7 @@ class LeggedRobotDynamicPos(LeggedRobotPos):
         points[:, 2] = base_z
 
         mode_colors = {
+            "delayed_static": (1.0, 0.80, 0.10),
             "pedestrian_like": (0.0, 0.95, 0.95),
             "back_and_forth": (0.2, 0.35, 1.0),
             "random_rigid_body": (1.0, 0.45, 0.0),

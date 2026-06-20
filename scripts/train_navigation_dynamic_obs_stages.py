@@ -91,39 +91,44 @@ E2E_DYNAMIC_AVOIDANCE_STAGES = [
 
 TRANSFORMER_DYNAMIC_AVOIDANCE_STAGES = [
     Stage(
-        "stage1_transformer_avoidance",
+        "stage0_rebot_low_speed_reflex",
+        "tasks/navigation/configs/dynamic_obstacles_transformer_stage0_delayed_static.yaml",
+        250,
+    ),
+    Stage(
+        "stage1_rebot_low_speed_moving",
         "tasks/navigation/configs/dynamic_obstacles_transformer_stage1_avoidance.yaml",
-        1500,
+        650,
     ),
     Stage(
-        "stage2_transformer_recovery_resume",
+        "stage2_rebot_faster_single",
         "tasks/navigation/configs/dynamic_obstacles_transformer_stage2_recovery.yaml",
-        2500,
+        850,
     ),
     Stage(
-        "stage3_transformer_failure_replay",
+        "stage3_rebot_failure_replay",
         "tasks/navigation/configs/dynamic_obstacles_transformer_stage3_failure_replay.yaml",
-        3000,
+        1000,
     ),
     Stage(
-        "stage4a_transformer_low_speed",
+        "stage4a_rebot_multi_low_speed",
         "tasks/navigation/configs/dynamic_obstacles_transformer_stage4a_low_speed.yaml",
-        2000,
+        500,
     ),
     Stage(
-        "stage4b_transformer_standard",
+        "stage4b_rebot_multi_standard",
         "tasks/navigation/configs/dynamic_obstacles_transformer_stage4b_standard.yaml",
-        3000,
+        700,
     ),
     Stage(
-        "stage4c_transformer_random",
+        "stage4c_rebot_multi_random",
         "tasks/navigation/configs/dynamic_obstacles_transformer_stage4c_random.yaml",
-        4000,
+        850,
     ),
     Stage(
-        "stage4d_transformer_mild_adversarial",
+        "stage4d_rebot_multi_mild_adversarial",
         "tasks/navigation/configs/dynamic_obstacles_transformer_stage4d_mild_adversarial.yaml",
-        4000,
+        850,
     ),
 ]
 
@@ -340,6 +345,15 @@ def main() -> int:
     parser.add_argument("--start-stage", type=int, default=0)
     parser.add_argument("--end-stage", type=int, default=None)
     parser.add_argument("--checkpoint", type=Path, default=None)
+    parser.add_argument(
+        "--checkpoint-from-previous-stage",
+        action="store_true",
+        help=(
+            "Treat --checkpoint as the completed previous stage checkpoint. "
+            "The first selected stage will run its full configured iterations instead of only "
+            "the difference between its target and the checkpoint iteration."
+        ),
+    )
     args = parser.parse_args()
     stages = STAGE_PLANS[args.plan]
     end_stage = len(stages) - 1 if args.end_stage is None else args.end_stage
@@ -357,7 +371,7 @@ def main() -> int:
             stage,
             checkpoint,
             log_dir,
-            resume_to_stage_target=(idx == args.start_stage),
+            resume_to_stage_target=(idx == args.start_stage and not args.checkpoint_from_previous_stage),
         )
         completed.append((stage.name, checkpoint))
 

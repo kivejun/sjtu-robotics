@@ -2,92 +2,145 @@ task:
   name: navigation/dynamic_obstacles
   family: navigation
   backend: sea_nav_modified_or_isaaclab
-
 runtime:
   conda_env: sea_nav
-
 environment:
   scene: dynamic_obstacles_transformer_stage4b_standard
   goal_randomization: true
   enable_dynamic_obstacles: true
   num_dynamic_obstacles: 3
   obstacle_motion_modes:
-    - pedestrian_like
-    - back_and_forth
-    - random_rigid_body
+  - pedestrian_like
+  - back_and_forth
+  - random_rigid_body
   obstacle_radius: 0.35
-  obstacle_speed: 0.40
-  obstacle_collision_distance: 0.56
-  obstacle_amplitude_scale: 0.75
-  obstacle_amplitude_min: 0.60
-  obstacle_amplitude_max: 1.35
+  obstacle_speed: 0.60
+  obstacle_collision_distance: 0.58
+  obstacle_amplitude_scale: 0.82
+  obstacle_amplitude_min: 0.45
+  obstacle_amplitude_max: 1.40
   phase_randomization: false
-  demo_force_path_obstacles: true
+  demo_force_path_obstacles: false
   demo_path_obstacle_fracs:
-    - 0.30
-    - 0.52
-    - 0.74
+  - 0.3
+  - 0.52
+  - 0.74
   demo_path_lateral_offsets:
-    - 0.0
-    - 0.18
-    - -0.18
+  - 0.0
+  - 0.18
+  - -0.18
   include_dynamic_obstacle_state: true
   dynamic_obstacle_state_k: 3
   ttc_horizon: 3.0
-  ttc_safe_distance: 0.56
-  path_block_distance: 3.0
-  path_block_width: 0.90
-  path_block_ttc: 2.8
-  preferred_speed: 0.52
-  wait_speed: 0.08
-  blocked_timeout: 2.2
-  episode_length_s: 16.0
-
+  ttc_safe_distance: 0.58
+  path_block_distance: 3.2
+  path_block_width: 1.2
+  path_block_ttc: 3.0
+  preferred_speed: 0.5
+  wait_speed: 0.0
+  blocked_timeout: 1.8
+  episode_length_s: 7.0
+  focus_near_robot: true
+  focus_phase_max: 0.8
+  focus_phase_min: 0.2
+  focus_all_obstacles: true
+  focus_distance_min: 0.40
+  focus_distance_max: 1.40
+  focus_lateral_min: 0.0
+  focus_lateral_max: 0.85
+  dynamic_obstacle_global_dim: 5
 policy:
   transformer_dim: 48
   transformer_heads: 4
   transformer_layers: 1
   transformer_dropout: 0.0
   dynamic_token_dim: 6
-  dynamic_global_dim: 2
-
+  dynamic_global_dim: 5
 replay:
   enable_collision_replay: true
-  replay_prob: 0.25
-
+  replay_prob: 0.35
 reward:
-  progress: 4.5
-  preferred_velocity: 1.8
-  dynamic_ttc: -3.2
-  dynamic_clearance: -1.6
-  wait: 0.9
-  blocked_fast_penalty: -1.1
-  detour: -0.30
-  near_goal_stop: 2.0
-  dynamic_collision: -130.0
-  successful_avoidance: 7.0
-  risk_reduction: 2.5
-  free_space_action: 1.0
-  unsafe_ttc: -1.1
-  nav_action_smoothness: -0.25
-  static_collision: -130.0
-  avoid_high_risk_distance: 1.05
-  avoid_low_risk_distance: 1.35
-  avoid_high_risk_ttc: 1.30
-  avoid_low_risk_ttc: 2.50
-  avoid_min_static_clearance: 0.45
-
+  progress: 0.0
+  preferred_velocity: 0.0
+  dynamic_ttc: 0.0
+  dynamic_clearance: 0.0
+  wait: 0.0
+  blocked_fast_penalty: 0.0
+  detour: 0.0
+  near_goal_stop: 0.0
+  successful_avoidance: 30.0
+  avoidance_clearance: 0.0
+  risk_reduction: 8.0
+  free_space_action: 5.0
+  escape_direction: 0.0
+  threat_direction_penalty: 0.0
+  stable_velocity: 0.0
+  resume_ready: 0.0
+  unsafe_ttc: -1.0
+  nav_action_smoothness: -0.15
+  dynamic_collision: -80.0
+  static_collision: -100.0
+  avoid_high_risk_distance: 1.1
+  avoid_low_risk_distance: 1.45
+  avoid_high_risk_ttc: 1.4
+  avoid_low_risk_ttc: 2.7
+  avoid_min_static_clearance: 0.5
+  risk_reduction_distance_weight: 0.55
+  risk_reduction_ttc_weight: 0.45
+  free_space_safe_distance: 0.65
+  free_space_speed_threshold: 0.08
+  unsafe_ttc_threshold: 1.0
+  nav_action_smoothness_sigma: 0.50
+  escape_speed_sigma: 0.42
+  threat_speed_sigma: 0.42
+  stable_max_speed: 0.22
+  stable_max_yaw_rate: 0.4
+  resume_min_dynamic_distance: 1.45
+  resume_min_ttc: 2.7
+  resume_min_static_clearance: 0.6
+  resume_max_speed: 0.25
+  resume_max_yaw_rate: 0.45
+  resume_heading_weight: 0.0
+  nav_action_smoothness_min_phase_weight: 1.0
+  avoidance_clearance_safe_distance: 1.45
+  avoidance_clearance_collision_distance: 0.56
+  avoidance_clearance_min_static_clearance: 0.35
+  stuck: 0.0
+  close_obst_vel: 0.0
+  ang_vel_xy: -0.02
+  collision: 0.0
+  velo_dir: 0.0
+  reach_pos_target_tight: 0.0
+  proximity: 0.0
+  rebot_distance: 0.0
+  rebot_collision: 0.0
+  rebot_walk: 0.0
+  rebot_energy: 0.0
+  rebot_contact: 0.0
+  rebot_diversity: 0.0
+  rebot_threat: -1.5
+  rebot_direction: -3.0
+  termination: -20.0
+  rebot_distance_sigma: 0.35
+  rebot_distance_collision_distance: 0.58
+  rebot_walk_contact_threshold: 1.0
+  rebot_energy_scale: 50.0
+  rebot_contact_force_scale: 100.0
+  rebot_threat_lambda: 0.45
+  rebot_threat_eta: 1.1
+  rebot_threat_sigma: 0.45
 training:
   task_name: go2_dynamic_obstacles
   experiment_name: Go2_transformer_dynamic_avoidance
   policy_class_name: TransformerActorCritic
   algorithm: ppo
   seed: 42
-  max_iterations: 3000
-  num_envs: 512
+  max_iterations: 700
+  num_envs: 2048
   headless: true
   reset_optimizer: false
-
+  num_steps_per_env: 48
+  log_interval: 1
 outputs:
   log_dir: logs/navigation/dynamic_obstacles_transformer_stage4b_standard
   checkpoint_dir: checkpoints/navigation/dynamic_obstacles_transformer_stage4b_standard

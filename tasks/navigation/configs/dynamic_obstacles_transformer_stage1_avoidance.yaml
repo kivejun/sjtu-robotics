@@ -2,43 +2,37 @@ task:
   name: navigation/dynamic_obstacles
   family: navigation
   backend: sea_nav_modified_or_isaaclab
-
 external_repo:
   path: external/SEA-Nav-Code
-  note: >
-    Transformer dynamic-obstacle stage 1. Keep SEA-Nav observations for static
-    geometry, encode explicit dynamic-obstacle tokens with a transformer, and
-    train the first emergency avoidance skill in one-obstacle scenes.
-
+  note: 'Transformer REBot-style avoidance stage 1. Single low-speed moving obstacle with randomized near-body crossing; pure avoidance reward.'
 runtime:
   conda_env: sea_nav
-
 environment:
-  scene: dynamic_obstacles_transformer_stage1_avoidance
+  scene: dynamic_obstacles_rebot_stage1_low_speed_moving
   goal_randomization: true
   enable_dynamic_obstacles: true
   num_dynamic_obstacles: 1
   obstacle_motion_modes:
-    - pedestrian_like
+  - pedestrian_like
   obstacle_radius: 0.35
-  obstacle_speed: 0.34
-  obstacle_collision_distance: 0.55
-  obstacle_amplitude_scale: 0.65
-  obstacle_amplitude_min: 0.55
+  obstacle_speed: 0.50
+  obstacle_collision_distance: 0.56
+  obstacle_amplitude_scale: 0.68
+  obstacle_amplitude_min: 0.45
   obstacle_amplitude_max: 1.20
   phase_randomization: true
   focus_near_robot: true
-  focus_distance_min: 0.75
+  focus_distance_min: 0.40
   focus_distance_max: 1.25
-  focus_lateral_min: 0.18
-  focus_lateral_max: 0.62
-  focus_phase_min: 0.25
-  focus_phase_max: 0.85
+  focus_lateral_min: 0.0
+  focus_lateral_max: 0.75
+  focus_phase_min: 0.3
+  focus_phase_max: 0.9
   training_interaction_scene: true
-  training_interaction_robot_jitter: 0.020
-  training_interaction_goal_jitter: 0.020
-  training_interaction_obstacle_frac_jitter: 0.030
-  training_interaction_obstacle_lateral_jitter: 0.040
+  training_interaction_robot_jitter: 0.04
+  training_interaction_goal_jitter: 0.025
+  training_interaction_obstacle_frac_jitter: 0.07
+  training_interaction_obstacle_lateral_jitter: 0.11
   demo_interaction_scene: false
   demo_interaction_face_goal: true
   demo_terrain_level: 1
@@ -50,32 +44,31 @@ environment:
   demo_goal_frac_y: 0.78
   demo_force_path_obstacles: true
   demo_path_obstacle_fracs:
-    - 0.22
+  - 0.22
   demo_path_lateral_offsets:
-    - 0.0
+  - 0.0
   include_dynamic_obstacle_state: true
   dynamic_obstacle_state_k: 3
   ttc_horizon: 3.0
-  ttc_safe_distance: 0.55
-  path_block_distance: 3.2
-  path_block_width: 0.95
+  ttc_safe_distance: 0.56
+  path_block_distance: 3.0
+  path_block_width: 1.1
   path_block_ttc: 3.0
-  path_block_rise: 0.20
+  path_block_rise: 0.2
   path_block_fall: 0.08
   path_block_threshold: 0.45
-  preferred_speed: 0.50
-  wait_speed: 0.08
-  blocked_timeout: 3.0
-  episode_length_s: 5.0
-
+  preferred_speed: 0.5
+  wait_speed: 0.0
+  blocked_timeout: 2.0
+  episode_length_s: 4.8
+  dynamic_obstacle_global_dim: 5
 policy:
   transformer_dim: 48
   transformer_heads: 4
   transformer_layers: 1
   transformer_dropout: 0.0
   dynamic_token_dim: 6
-  dynamic_global_dim: 2
-
+  dynamic_global_dim: 5
 reward:
   termination: -20.0
   collision: 0.0
@@ -93,51 +86,77 @@ reward:
   blocked_fast_penalty: 0.0
   detour: 0.0
   near_goal_stop: 0.0
-  successful_avoidance: 12.0
-  risk_reduction: 4.0
-  free_space_action: 2.0
+  successful_avoidance: 30.0
+  avoidance_clearance: 0.0
+  risk_reduction: 8.0
+  free_space_action: 5.0
+  escape_direction: 0.0
+  threat_direction_penalty: 0.0
+  stable_velocity: 0.0
+  resume_ready: 0.0
   unsafe_ttc: -1.0
-  nav_action_smoothness: -0.2
+  nav_action_smoothness: -0.15
   dynamic_collision: -80.0
   static_collision: -100.0
   avoid_high_risk_distance: 1.05
   avoid_low_risk_distance: 1.35
-  avoid_high_risk_ttc: 1.30
-  avoid_low_risk_ttc: 2.50
+  avoid_high_risk_ttc: 1.3
+  avoid_low_risk_ttc: 2.5
   avoid_min_static_clearance: 0.45
   risk_reduction_distance_weight: 0.55
   risk_reduction_ttc_weight: 0.45
   free_space_safe_distance: 0.65
   free_space_speed_threshold: 0.08
-  unsafe_ttc_threshold: 1.00
+  unsafe_ttc_threshold: 1.0
   nav_action_smoothness_sigma: 0.50
-
+  escape_speed_sigma: 0.42
+  threat_speed_sigma: 0.42
+  nav_action_smoothness_min_phase_weight: 1.0
+  avoidance_clearance_safe_distance: 1.35
+  avoidance_clearance_collision_distance: 0.56
+  avoidance_clearance_min_static_clearance: 0.35
+  resume_heading_weight: 0.0
+  rebot_distance: 0.0
+  rebot_collision: 0.0
+  rebot_walk: 0.0
+  rebot_energy: 0.0
+  rebot_contact: 0.0
+  rebot_diversity: 0.0
+  rebot_threat: -1.0
+  rebot_direction: -2.5
+  rebot_distance_sigma: 0.35
+  rebot_distance_collision_distance: 0.56
+  rebot_walk_contact_threshold: 1.0
+  rebot_energy_scale: 50.0
+  rebot_contact_force_scale: 100.0
+  rebot_threat_lambda: 0.45
+  rebot_threat_eta: 1.1
+  rebot_threat_sigma: 0.45
 training:
   task_name: go2_dynamic_obstacles
   experiment_name: Go2_transformer_dynamic_avoidance
   policy_class_name: TransformerActorCritic
   algorithm: ppo
   seed: 42
-  max_iterations: 1500
-  num_envs: 512
+  max_iterations: 650
+  num_envs: 2048
   headless: true
   reset_optimizer: true
-
+  num_steps_per_env: 48
+  log_interval: 1
 evaluation:
   experiment_name: Go2_transformer_dynamic_avoidance
   num_envs: 1
   headless: false
   total_episodes: 10
-
 recording:
   experiment_name: Go2_transformer_dynamic_avoidance
   num_envs: 1
   headless: true
   video_length: 1800
   total_episodes: 5
-
 outputs:
-  log_dir: logs/navigation/dynamic_obstacles_transformer_stage1_avoidance
-  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_transformer_stage1_avoidance
-  video_dir: outputs/videos/navigation/dynamic_obstacles_transformer_stage1_avoidance
-  metrics_path: outputs/metrics/navigation_dynamic_obstacles_transformer_stage1_avoidance.json
+  log_dir: logs/navigation/dynamic_obstacles_rebot_stage1_low_speed_moving
+  checkpoint_dir: checkpoints/navigation/dynamic_obstacles_rebot_stage1_low_speed_moving
+  video_dir: outputs/videos/navigation/dynamic_obstacles_rebot_stage1_low_speed_moving
+  metrics_path: outputs/metrics/dynamic_obstacles_rebot_stage1_low_speed_moving.json

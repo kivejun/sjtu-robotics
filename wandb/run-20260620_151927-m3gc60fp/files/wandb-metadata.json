@@ -1,0 +1,38 @@
+{
+  "os": "Linux-5.15.0-25-generic-x86_64-with-glibc2.17",
+  "python": "CPython 3.8.20",
+  "startedAt": "2026-06-20T07:19:27.610281Z",
+  "program": "<stdin>",
+  "git": {
+    "remote": "git@github.com:kivejun/sjtu-robotics.git",
+    "commit": "f36f32531f6d6c981b408200451de74f36a9f5ef"
+  },
+  "email": "jun.042309@gmail.com",
+  "root": "/root/sjtu-robotics",
+  "host": "autodl-container-9cd04aa11e-8a72c29c",
+  "executable": "/root/miniconda3/envs/sea_nav/bin/python",
+  "cpu_count": 104,
+  "cpu_count_logical": 208,
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "32212254720",
+      "used": "12890279936"
+    }
+  },
+  "memory": {
+    "total": "1081806536704"
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA GeForce RTX 4090",
+      "memoryTotal": "25757220864",
+      "cudaCores": 16384,
+      "architecture": "Ada",
+      "uuid": "GPU-866a6206-cc3d-25d6-3a9d-22b742ab3182"
+    }
+  ],
+  "cudaVersion": "12.8",
+  "writerId": "06hy6gcmjj574rmv80l9gpnkbcpeo3ss"
+}

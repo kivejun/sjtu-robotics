@@ -80,6 +80,7 @@ class OnPolicyRunner:
 
         self.num_steps_per_env = self.cfg["num_steps_per_env"]
         self.save_interval = self.cfg["save_interval"]
+        self.log_interval = max(1, int(self.cfg.get("log_interval", 10)))
 
         
         self.alg.init_storage(num_envs=self.env.num_envs, num_transitions_per_env=self.num_steps_per_env, 
@@ -153,7 +154,7 @@ class OnPolicyRunner:
             
             stop = time.time()
             learn_time = stop - start
-            if self.log_dir is not None and it % 10 == 0 and it >= self.current_learning_iteration + 10:
+            if self.log_dir is not None and it % self.log_interval == 0 and it >= self.current_learning_iteration + self.log_interval:
                 if self.args.wandb:
                     self.wandb_log(locals())
                 else:

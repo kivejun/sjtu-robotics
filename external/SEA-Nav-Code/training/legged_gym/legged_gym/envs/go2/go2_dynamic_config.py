@@ -54,7 +54,10 @@ class Go2DynamicObstaclesCfg(Go2PosRoughCfg):
         episode_length_s = _env_float("SEA_NAV_ENV_EPISODE_LENGTH_S", Go2PosRoughCfg.env.episode_length_s)
         include_dynamic_obstacle_state = _env_bool("SEA_NAV_DYNAMIC_OBS_STATE", False)
         dynamic_obstacle_state_k = _env_int("SEA_NAV_DYNAMIC_OBS_K", 3)
-        num_dynamic_obstacle_obs = dynamic_obstacle_state_k * 6 + 2 if include_dynamic_obstacle_state else 0
+        dynamic_obstacle_global_dim = _env_int("SEA_NAV_DYNAMIC_OBS_GLOBAL_DIM", 2)
+        num_dynamic_obstacle_obs = (
+            dynamic_obstacle_state_k * 6 + dynamic_obstacle_global_dim if include_dynamic_obstacle_state else 0
+        )
         num_obs_one_step = (
             Go2PosRoughCfg.env.num_props
             + Go2PosRoughCfg.env.num_rays
@@ -104,12 +107,19 @@ class Go2DynamicObstaclesCfg(Go2PosRoughCfg):
         amplitude_max = _env_float("SEA_NAV_DYNAMIC_AMPLITUDE_MAX", 1.35)
         phase_randomization = _env_bool("SEA_NAV_DYNAMIC_PHASE_RANDOMIZATION", True)
         focus_near_robot = _env_bool("SEA_NAV_DYNAMIC_FOCUS_NEAR_ROBOT", False)
+        focus_all_obstacles = _env_bool("SEA_NAV_DYNAMIC_FOCUS_ALL_OBSTACLES", False)
         focus_distance_min = _env_float("SEA_NAV_DYNAMIC_FOCUS_DISTANCE_MIN", 0.90)
         focus_distance_max = _env_float("SEA_NAV_DYNAMIC_FOCUS_DISTANCE_MAX", 1.40)
         focus_lateral_min = _env_float("SEA_NAV_DYNAMIC_FOCUS_LATERAL_MIN", 0.25)
         focus_lateral_max = _env_float("SEA_NAV_DYNAMIC_FOCUS_LATERAL_MAX", 0.75)
         focus_phase_min = _env_float("SEA_NAV_DYNAMIC_FOCUS_PHASE_MIN", 0.35)
         focus_phase_max = _env_float("SEA_NAV_DYNAMIC_FOCUS_PHASE_MAX", 0.85)
+        delayed_static_activation_min = _env_float("SEA_NAV_DYNAMIC_DELAYED_STATIC_ACTIVATION_MIN", 0.45)
+        delayed_static_activation_max = _env_float("SEA_NAV_DYNAMIC_DELAYED_STATIC_ACTIVATION_MAX", 1.10)
+        delayed_static_distance_min = _env_float("SEA_NAV_DYNAMIC_DELAYED_STATIC_DISTANCE_MIN", focus_distance_min)
+        delayed_static_distance_max = _env_float("SEA_NAV_DYNAMIC_DELAYED_STATIC_DISTANCE_MAX", focus_distance_max)
+        delayed_static_lateral_min = _env_float("SEA_NAV_DYNAMIC_DELAYED_STATIC_LATERAL_MIN", focus_lateral_min)
+        delayed_static_lateral_max = _env_float("SEA_NAV_DYNAMIC_DELAYED_STATIC_LATERAL_MAX", focus_lateral_max)
         training_interaction_scene = _env_bool("SEA_NAV_DYNAMIC_TRAINING_INTERACTION_SCENE", False)
         training_interaction_robot_jitter = _env_float("SEA_NAV_DYNAMIC_TRAINING_ROBOT_JITTER", 0.0)
         training_interaction_goal_jitter = _env_float("SEA_NAV_DYNAMIC_TRAINING_GOAL_JITTER", 0.0)
@@ -187,6 +197,9 @@ class Go2DynamicObstaclesCfg(Go2PosRoughCfg):
             successful_avoidance = (
                 0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_SUCCESSFUL_AVOIDANCE", 0.0)
             )
+            avoidance_clearance = (
+                0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_AVOIDANCE_CLEARANCE", 0.0)
+            )
             risk_reduction = (
                 0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_RISK_REDUCTION", 0.0)
             )
@@ -200,6 +213,26 @@ class Go2DynamicObstaclesCfg(Go2PosRoughCfg):
             static_collision = (
                 0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_STATIC_COLLISION", 0.0)
             )
+            escape_direction = (
+                0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_ESCAPE_DIRECTION", 0.0)
+            )
+            threat_direction_penalty = (
+                0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_THREAT_DIRECTION_PENALTY", 0.0)
+            )
+            stable_velocity = (
+                0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_STABLE_VELOCITY", 0.0)
+            )
+            resume_ready = (
+                0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_RESUME_READY", 0.0)
+            )
+            rebot_distance = 0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_REBOT_DISTANCE", 0.0)
+            rebot_collision = 0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_REBOT_COLLISION", 0.0)
+            rebot_walk = 0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_REBOT_WALK", 0.0)
+            rebot_energy = 0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_REBOT_ENERGY", 0.0)
+            rebot_contact = 0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_REBOT_CONTACT", 0.0)
+            rebot_diversity = 0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_REBOT_DIVERSITY", 0.0)
+            rebot_threat = 0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_REBOT_THREAT", 0.0)
+            rebot_direction = 0.0 if _env_bool("SEA_NAV_DYNAMIC_LEGACY_REWARD", False) else _env_float("SEA_NAV_REWARD_REBOT_DIRECTION", 0.0)
 
         class progress_config:
             clip = 0.25
@@ -251,6 +284,29 @@ class Go2DynamicObstaclesCfg(Go2PosRoughCfg):
             low_risk_ttc = _env_float("SEA_NAV_REWARD_AVOID_LOW_RISK_TTC", 2.50)
             min_static_clearance = _env_float("SEA_NAV_REWARD_AVOID_MIN_STATIC_CLEARANCE", 0.45)
 
+        class avoidance_clearance_config:
+            safe_distance = _env_float("SEA_NAV_REWARD_AVOIDANCE_CLEARANCE_SAFE_DISTANCE", 1.10)
+            collision_distance = _env_float("SEA_NAV_REWARD_AVOIDANCE_CLEARANCE_COLLISION_DISTANCE", 0.55)
+            min_static_clearance = _env_float("SEA_NAV_REWARD_AVOIDANCE_CLEARANCE_MIN_STATIC_CLEARANCE", 0.35)
+
+        class rebot_distance_config:
+            sigma = _env_float("SEA_NAV_REWARD_REBOT_DISTANCE_SIGMA", 0.35)
+            collision_distance = _env_float("SEA_NAV_REWARD_REBOT_DISTANCE_COLLISION_DISTANCE", 0.55)
+
+        class rebot_walk_config:
+            contact_threshold = _env_float("SEA_NAV_REWARD_REBOT_WALK_CONTACT_THRESHOLD", 1.0)
+
+        class rebot_energy_config:
+            scale = _env_float("SEA_NAV_REWARD_REBOT_ENERGY_SCALE", 50.0)
+
+        class rebot_contact_config:
+            force_scale = _env_float("SEA_NAV_REWARD_REBOT_CONTACT_FORCE_SCALE", 100.0)
+
+        class rebot_threat_config:
+            lambda_speed = _env_float("SEA_NAV_REWARD_REBOT_THREAT_LAMBDA", 0.45)
+            eta = _env_float("SEA_NAV_REWARD_REBOT_THREAT_ETA", 1.1)
+            sigma = _env_float("SEA_NAV_REWARD_REBOT_THREAT_SIGMA", 0.45)
+
         class risk_reduction_config:
             distance_weight = _env_float("SEA_NAV_REWARD_RISK_REDUCTION_DISTANCE_WEIGHT", 0.55)
             ttc_weight = _env_float("SEA_NAV_REWARD_RISK_REDUCTION_TTC_WEIGHT", 0.45)
@@ -264,6 +320,28 @@ class Go2DynamicObstaclesCfg(Go2PosRoughCfg):
 
         class nav_action_smoothness_config:
             sigma = _env_float("SEA_NAV_REWARD_NAV_ACTION_SMOOTHNESS_SIGMA", 0.50)
+            min_phase_weight = _env_float("SEA_NAV_REWARD_NAV_ACTION_SMOOTHNESS_MIN_PHASE_WEIGHT", 0.20)
+
+        class escape_direction_config:
+            high_risk_only = _env_bool("SEA_NAV_REWARD_ESCAPE_HIGH_RISK_ONLY", True)
+            speed_sigma = _env_float("SEA_NAV_REWARD_ESCAPE_SPEED_SIGMA", 0.45)
+
+        class threat_direction_penalty_config:
+            high_risk_only = _env_bool("SEA_NAV_REWARD_THREAT_HIGH_RISK_ONLY", True)
+            speed_sigma = _env_float("SEA_NAV_REWARD_THREAT_SPEED_SIGMA", 0.45)
+
+        class stable_velocity_config:
+            max_speed = _env_float("SEA_NAV_REWARD_STABLE_MAX_SPEED", 0.18)
+            max_yaw_rate = _env_float("SEA_NAV_REWARD_STABLE_MAX_YAW_RATE", 0.35)
+            low_risk_only = _env_bool("SEA_NAV_REWARD_STABLE_LOW_RISK_ONLY", True)
+
+        class resume_ready_config:
+            min_dynamic_distance = _env_float("SEA_NAV_REWARD_RESUME_MIN_DYNAMIC_DISTANCE", 1.35)
+            min_ttc = _env_float("SEA_NAV_REWARD_RESUME_MIN_TTC", 2.50)
+            min_static_clearance = _env_float("SEA_NAV_REWARD_RESUME_MIN_STATIC_CLEARANCE", 0.55)
+            max_speed = _env_float("SEA_NAV_REWARD_RESUME_MAX_SPEED", 0.22)
+            max_yaw_rate = _env_float("SEA_NAV_REWARD_RESUME_MAX_YAW_RATE", 0.40)
+            heading_weight = _env_float("SEA_NAV_REWARD_RESUME_HEADING_WEIGHT", 0.35)
 
     class visualization(Go2PosRoughCfg.visualization):
         draw_dynamic_obstacles = True
@@ -288,4 +366,6 @@ class Go2DynamicObstaclesCfgPPO(Go2PosRoughCfgPPO):
     class runner(Go2PosRoughCfgPPO.runner):
         experiment_name = "Go2_dynamic_obstacles"
         max_iterations = 20
+        num_steps_per_env = _env_int("SEA_NAV_RUNNER_NUM_STEPS_PER_ENV", Go2PosRoughCfgPPO.runner.num_steps_per_env)
+        log_interval = _env_int("SEA_NAV_RUNNER_LOG_INTERVAL", 10)
         policy_class_name = _env_str("SEA_NAV_POLICY_CLASS_NAME", Go2PosRoughCfgPPO.runner.policy_class_name)

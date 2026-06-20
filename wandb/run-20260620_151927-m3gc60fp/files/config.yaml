@@ -1,0 +1,63 @@
+_wandb:
+    value:
+        cli_version: 0.24.2
+        e:
+            06hy6gcmjj574rmv80l9gpnkbcpeo3ss:
+                cpu_count: 104
+                cpu_count_logical: 208
+                cudaVersion: "12.8"
+                disk:
+                    /:
+                        total: "32212254720"
+                        used: "12890279936"
+                email: jun.042309@gmail.com
+                executable: /root/miniconda3/envs/sea_nav/bin/python
+                git:
+                    commit: f36f32531f6d6c981b408200451de74f36a9f5ef
+                    remote: git@github.com:kivejun/sjtu-robotics.git
+                gpu: NVIDIA GeForce RTX 4090
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 16384
+                      memoryTotal: "25757220864"
+                      name: NVIDIA GeForce RTX 4090
+                      uuid: GPU-866a6206-cc3d-25d6-3a9d-22b742ab3182
+                host: autodl-container-9cd04aa11e-8a72c29c
+                memory:
+                    total: "1081806536704"
+                os: Linux-5.15.0-25-generic-x86_64-with-glibc2.17
+                program: <stdin>
+                python: CPython 3.8.20
+                root: /root/sjtu-robotics
+                startedAt: "2026-06-20T07:19:27.610281Z"
+                writerId: 06hy6gcmjj574rmv80l9gpnkbcpeo3ss
+        m: []
+        python_version: 3.8.20
+        t:
+            "3":
+                - 2
+                - 3
+                - 13
+                - 15
+                - 16
+                - 61
+                - 62
+            "4": 3.8.20
+            "5": 0.24.2
+            "12": 0.24.2
+            "13": linux-x86_64
+first_iteration:
+    value: 1
+last_iteration:
+    value: 309
+parsed_iterations:
+    value: 309
+posthoc_reupload:
+    value: true
+source_checkpoint:
+    value: /root/autodl-tmp/sjtu-robotics/external/sea_nav_logs/Go2_transformer_dynamic_avoidance/06_19_19-59-09_/model_310.pt
+source_log:
+    value: /root/sjtu-robotics/outputs/logs/navigation/dynamic_obstacles_multistage/stage0_rebot_low_speed_reflex.log
+stage:
+    value: stage0_rebot_low_speed_reflex

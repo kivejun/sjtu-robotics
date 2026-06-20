@@ -2,30 +2,28 @@ task:
   name: navigation/dynamic_obstacles
   family: navigation
   backend: sea_nav_modified_or_isaaclab
-
 external_repo:
   path: external/SEA-Nav-Code
-  note: >
-    Smoke test for transformer dynamic-obstacle stage 1. This keeps the same
-    scene/reward/policy structure as stage1_avoidance, but uses a tiny training
-    budget to verify startup, rollout, PPO update, and checkpoint saving.
+  note: 'Smoke test for transformer dynamic-obstacle stage 1. This keeps the same
+    scene/reward/policy structure as stage1_avoidance, but uses a tiny training budget
+    to verify startup, rollout, PPO update, and checkpoint saving.
 
+    '
 runtime:
   conda_env: sea_nav
-
 environment:
   scene: dynamic_obstacles_transformer_stage1_smoke
   goal_randomization: true
   enable_dynamic_obstacles: true
   num_dynamic_obstacles: 1
   obstacle_motion_modes:
-    - pedestrian_like
+  - pedestrian_like
   obstacle_radius: 0.35
   obstacle_speed: 0.34
   obstacle_collision_distance: 0.55
   obstacle_amplitude_scale: 0.65
   obstacle_amplitude_min: 0.55
-  obstacle_amplitude_max: 1.20
+  obstacle_amplitude_max: 1.2
   phase_randomization: true
   focus_near_robot: true
   focus_distance_min: 0.75
@@ -50,9 +48,9 @@ environment:
   demo_goal_frac_y: 0.78
   demo_force_path_obstacles: true
   demo_path_obstacle_fracs:
-    - 0.22
+  - 0.22
   demo_path_lateral_offsets:
-    - 0.0
+  - 0.0
   include_dynamic_obstacle_state: true
   dynamic_obstacle_state_k: 3
   ttc_horizon: 3.0
@@ -60,22 +58,21 @@ environment:
   path_block_distance: 3.2
   path_block_width: 0.95
   path_block_ttc: 3.0
-  path_block_rise: 0.20
+  path_block_rise: 0.2
   path_block_fall: 0.08
   path_block_threshold: 0.45
-  preferred_speed: 0.50
+  preferred_speed: 0.5
   wait_speed: 0.08
   blocked_timeout: 3.0
   episode_length_s: 5.0
-
+  dynamic_obstacle_global_dim: 5
 policy:
   transformer_dim: 48
   transformer_heads: 4
   transformer_layers: 1
   transformer_dropout: 0.0
   dynamic_token_dim: 6
-  dynamic_global_dim: 2
-
+  dynamic_global_dim: 5
 reward:
   termination: -20.0
   collision: 0.0
@@ -93,25 +90,43 @@ reward:
   blocked_fast_penalty: 0.0
   detour: 0.0
   near_goal_stop: 0.0
-  successful_avoidance: 12.0
-  risk_reduction: 4.0
-  free_space_action: 2.0
+  successful_avoidance: 30.0
+  risk_reduction: 8.0
+  free_space_action: 5.0
   unsafe_ttc: -1.0
-  nav_action_smoothness: -0.2
+  nav_action_smoothness: -0.15
   dynamic_collision: -80.0
   static_collision: -100.0
   avoid_high_risk_distance: 1.05
   avoid_low_risk_distance: 1.35
-  avoid_high_risk_ttc: 1.30
-  avoid_low_risk_ttc: 2.50
+  avoid_high_risk_ttc: 1.3
+  avoid_low_risk_ttc: 2.5
   avoid_min_static_clearance: 0.45
   risk_reduction_distance_weight: 0.55
   risk_reduction_ttc_weight: 0.45
   free_space_safe_distance: 0.65
   free_space_speed_threshold: 0.08
-  unsafe_ttc_threshold: 1.00
+  unsafe_ttc_threshold: 1.0
   nav_action_smoothness_sigma: 0.50
-
+  nav_action_smoothness_min_phase_weight: 0.2
+  escape_direction: 0.0
+  threat_direction_penalty: 0.0
+  rebot_distance: 0.0
+  rebot_collision: 0.0
+  rebot_walk: 0.0
+  rebot_energy: 0.0
+  rebot_contact: 0.0
+  rebot_diversity: 0.0
+  rebot_threat: -0.8
+  rebot_direction: -2.0
+  rebot_distance_sigma: 0.35
+  rebot_distance_collision_distance: 0.55
+  rebot_walk_contact_threshold: 1.0
+  rebot_energy_scale: 50.0
+  rebot_contact_force_scale: 100.0
+  rebot_threat_lambda: 0.45
+  rebot_threat_eta: 1.1
+  rebot_threat_sigma: 0.45
 training:
   task_name: go2_dynamic_obstacles
   experiment_name: Go2_transformer_dynamic_avoidance_smoke
@@ -122,7 +137,6 @@ training:
   num_envs: 64
   headless: true
   reset_optimizer: true
-
 outputs:
   log_dir: logs/navigation/dynamic_obstacles_transformer_stage1_smoke
   checkpoint_dir: checkpoints/navigation/dynamic_obstacles_transformer_stage1_smoke

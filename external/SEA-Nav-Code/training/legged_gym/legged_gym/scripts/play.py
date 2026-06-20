@@ -978,6 +978,8 @@ def dwa_pipeline_actions(env):
 
 
 def set_recording_camera(env, camera_handle):
+    if camera_handle is None or int(camera_handle) < 0:
+        return
     """Set the recording camera.
 
     The default follows the robot from a low oblique angle.  For navigation

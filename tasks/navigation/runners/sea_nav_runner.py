@@ -83,12 +83,19 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "obstacle_amplitude_max": "SEA_NAV_DYNAMIC_AMPLITUDE_MAX",
         "phase_randomization": "SEA_NAV_DYNAMIC_PHASE_RANDOMIZATION",
         "focus_near_robot": "SEA_NAV_DYNAMIC_FOCUS_NEAR_ROBOT",
+        "focus_all_obstacles": "SEA_NAV_DYNAMIC_FOCUS_ALL_OBSTACLES",
         "focus_distance_min": "SEA_NAV_DYNAMIC_FOCUS_DISTANCE_MIN",
         "focus_distance_max": "SEA_NAV_DYNAMIC_FOCUS_DISTANCE_MAX",
         "focus_lateral_min": "SEA_NAV_DYNAMIC_FOCUS_LATERAL_MIN",
         "focus_lateral_max": "SEA_NAV_DYNAMIC_FOCUS_LATERAL_MAX",
         "focus_phase_min": "SEA_NAV_DYNAMIC_FOCUS_PHASE_MIN",
         "focus_phase_max": "SEA_NAV_DYNAMIC_FOCUS_PHASE_MAX",
+        "delayed_static_activation_min": "SEA_NAV_DYNAMIC_DELAYED_STATIC_ACTIVATION_MIN",
+        "delayed_static_activation_max": "SEA_NAV_DYNAMIC_DELAYED_STATIC_ACTIVATION_MAX",
+        "delayed_static_distance_min": "SEA_NAV_DYNAMIC_DELAYED_STATIC_DISTANCE_MIN",
+        "delayed_static_distance_max": "SEA_NAV_DYNAMIC_DELAYED_STATIC_DISTANCE_MAX",
+        "delayed_static_lateral_min": "SEA_NAV_DYNAMIC_DELAYED_STATIC_LATERAL_MIN",
+        "delayed_static_lateral_max": "SEA_NAV_DYNAMIC_DELAYED_STATIC_LATERAL_MAX",
         "training_interaction_scene": "SEA_NAV_DYNAMIC_TRAINING_INTERACTION_SCENE",
         "training_interaction_robot_jitter": "SEA_NAV_DYNAMIC_TRAINING_ROBOT_JITTER",
         "training_interaction_goal_jitter": "SEA_NAV_DYNAMIC_TRAINING_GOAL_JITTER",
@@ -115,6 +122,7 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "demo_random_range_scale": "SEA_NAV_DYNAMIC_DEMO_RANDOM_RANGE_SCALE",
         "demo_motion_range_max": "SEA_NAV_DYNAMIC_DEMO_MOTION_RANGE_MAX",
         "dynamic_obstacle_state_k": "SEA_NAV_DYNAMIC_OBS_K",
+        "dynamic_obstacle_global_dim": "SEA_NAV_DYNAMIC_OBS_GLOBAL_DIM",
         "ttc_horizon": "SEA_NAV_DYNAMIC_TTC_HORIZON",
         "path_block_distance": "SEA_NAV_DYNAMIC_PATH_BLOCK_DISTANCE",
         "path_block_width": "SEA_NAV_DYNAMIC_PATH_BLOCK_WIDTH",
@@ -165,10 +173,23 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "near_goal_stop": "SEA_NAV_REWARD_NEAR_GOAL_STOP",
         "dynamic_collision": "SEA_NAV_REWARD_DYNAMIC_COLLISION",
         "successful_avoidance": "SEA_NAV_REWARD_SUCCESSFUL_AVOIDANCE",
+        "avoidance_clearance": "SEA_NAV_REWARD_AVOIDANCE_CLEARANCE",
         "risk_reduction": "SEA_NAV_REWARD_RISK_REDUCTION",
         "free_space_action": "SEA_NAV_REWARD_FREE_SPACE_ACTION",
         "unsafe_ttc": "SEA_NAV_REWARD_UNSAFE_TTC",
         "nav_action_smoothness": "SEA_NAV_REWARD_NAV_ACTION_SMOOTHNESS",
+        "escape_direction": "SEA_NAV_REWARD_ESCAPE_DIRECTION",
+        "threat_direction_penalty": "SEA_NAV_REWARD_THREAT_DIRECTION_PENALTY",
+        "stable_velocity": "SEA_NAV_REWARD_STABLE_VELOCITY",
+        "resume_ready": "SEA_NAV_REWARD_RESUME_READY",
+        "rebot_distance": "SEA_NAV_REWARD_REBOT_DISTANCE",
+        "rebot_collision": "SEA_NAV_REWARD_REBOT_COLLISION",
+        "rebot_walk": "SEA_NAV_REWARD_REBOT_WALK",
+        "rebot_energy": "SEA_NAV_REWARD_REBOT_ENERGY",
+        "rebot_contact": "SEA_NAV_REWARD_REBOT_CONTACT",
+        "rebot_diversity": "SEA_NAV_REWARD_REBOT_DIVERSITY",
+        "rebot_threat": "SEA_NAV_REWARD_REBOT_THREAT",
+        "rebot_direction": "SEA_NAV_REWARD_REBOT_DIRECTION",
         "static_collision": "SEA_NAV_REWARD_STATIC_COLLISION",
         "progress_blocked_scale": "SEA_NAV_REWARD_PROGRESS_BLOCKED_SCALE",
         "progress_near_goal_scale": "SEA_NAV_REWARD_PROGRESS_NEAR_GOAL_SCALE",
@@ -195,12 +216,34 @@ def _apply_dynamic_obstacle_env(cfg: Mapping[str, Any], env: dict[str, str]) -> 
         "avoid_high_risk_ttc": "SEA_NAV_REWARD_AVOID_HIGH_RISK_TTC",
         "avoid_low_risk_ttc": "SEA_NAV_REWARD_AVOID_LOW_RISK_TTC",
         "avoid_min_static_clearance": "SEA_NAV_REWARD_AVOID_MIN_STATIC_CLEARANCE",
+        "avoidance_clearance_safe_distance": "SEA_NAV_REWARD_AVOIDANCE_CLEARANCE_SAFE_DISTANCE",
+        "avoidance_clearance_collision_distance": "SEA_NAV_REWARD_AVOIDANCE_CLEARANCE_COLLISION_DISTANCE",
+        "avoidance_clearance_min_static_clearance": "SEA_NAV_REWARD_AVOIDANCE_CLEARANCE_MIN_STATIC_CLEARANCE",
+        "rebot_distance_sigma": "SEA_NAV_REWARD_REBOT_DISTANCE_SIGMA",
+        "rebot_distance_collision_distance": "SEA_NAV_REWARD_REBOT_DISTANCE_COLLISION_DISTANCE",
+        "rebot_walk_contact_threshold": "SEA_NAV_REWARD_REBOT_WALK_CONTACT_THRESHOLD",
+        "rebot_energy_scale": "SEA_NAV_REWARD_REBOT_ENERGY_SCALE",
+        "rebot_contact_force_scale": "SEA_NAV_REWARD_REBOT_CONTACT_FORCE_SCALE",
+        "rebot_threat_lambda": "SEA_NAV_REWARD_REBOT_THREAT_LAMBDA",
+        "rebot_threat_eta": "SEA_NAV_REWARD_REBOT_THREAT_ETA",
+        "rebot_threat_sigma": "SEA_NAV_REWARD_REBOT_THREAT_SIGMA",
         "risk_reduction_distance_weight": "SEA_NAV_REWARD_RISK_REDUCTION_DISTANCE_WEIGHT",
         "risk_reduction_ttc_weight": "SEA_NAV_REWARD_RISK_REDUCTION_TTC_WEIGHT",
         "free_space_safe_distance": "SEA_NAV_REWARD_FREE_SPACE_SAFE_DISTANCE",
         "free_space_speed_threshold": "SEA_NAV_REWARD_FREE_SPACE_SPEED_THRESHOLD",
         "unsafe_ttc_threshold": "SEA_NAV_REWARD_UNSAFE_TTC_THRESHOLD",
         "nav_action_smoothness_sigma": "SEA_NAV_REWARD_NAV_ACTION_SMOOTHNESS_SIGMA",
+        "nav_action_smoothness_min_phase_weight": "SEA_NAV_REWARD_NAV_ACTION_SMOOTHNESS_MIN_PHASE_WEIGHT",
+        "escape_speed_sigma": "SEA_NAV_REWARD_ESCAPE_SPEED_SIGMA",
+        "threat_speed_sigma": "SEA_NAV_REWARD_THREAT_SPEED_SIGMA",
+        "stable_max_speed": "SEA_NAV_REWARD_STABLE_MAX_SPEED",
+        "stable_max_yaw_rate": "SEA_NAV_REWARD_STABLE_MAX_YAW_RATE",
+        "resume_min_dynamic_distance": "SEA_NAV_REWARD_RESUME_MIN_DYNAMIC_DISTANCE",
+        "resume_min_ttc": "SEA_NAV_REWARD_RESUME_MIN_TTC",
+        "resume_min_static_clearance": "SEA_NAV_REWARD_RESUME_MIN_STATIC_CLEARANCE",
+        "resume_max_speed": "SEA_NAV_REWARD_RESUME_MAX_SPEED",
+        "resume_max_yaw_rate": "SEA_NAV_REWARD_RESUME_MAX_YAW_RATE",
+        "resume_heading_weight": "SEA_NAV_REWARD_RESUME_HEADING_WEIGHT",
     }
     for cfg_key, env_key in reward_mapping.items():
         if cfg_key in reward_cfg:
@@ -292,7 +335,8 @@ def _base_paths(cfg: Mapping[str, Any]) -> tuple[Path, Path, Path]:
 def _python_command(cfg: Mapping[str, Any], script: Path) -> list[str]:
     runtime_cfg = _section(cfg, "runtime")
     conda_env = str(runtime_cfg.get("conda_env", "sea_nav"))
-    return ["conda", "run", "--no-capture-output", "-n", conda_env, "python", str(script)]
+    conda_exe = os.environ.get("CONDA_EXE") or shutil.which("conda") or "conda"
+    return [conda_exe, "run", "--no-capture-output", "-n", conda_env, "python", str(script)]
 
 
 def _command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) -> tuple[list[str], Path, dict[str, str]]:
@@ -316,6 +360,10 @@ def _command(cfg: Mapping[str, Any], command: str, checkpoint: str | None) -> tu
 
     if command == "train":
         _apply_dynamic_obstacle_env(cfg, env)
+        if "num_steps_per_env" in training_cfg:
+            env["SEA_NAV_RUNNER_NUM_STEPS_PER_ENV"] = str(training_cfg["num_steps_per_env"])
+        if "log_interval" in training_cfg:
+            env["SEA_NAV_RUNNER_LOG_INTERVAL"] = str(training_cfg["log_interval"])
         cmd = _python_command(cfg, train_script)
         cmd.extend(
             [

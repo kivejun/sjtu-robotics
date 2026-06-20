@@ -28,6 +28,7 @@
 #
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
+import os
 import sys
 from isaacgym import gymapi
 from isaacgym import gymutil
@@ -54,7 +55,7 @@ class BaseTask():
 
         # graphics device for rendering, -1 for no rendering
         self.graphics_device_id = self.sim_device_id
-        if self.headless == True:
+        if self.headless == True and os.environ.get("SEA_NAV_ENABLE_HEADLESS_CAMERA") != "1":
             self.graphics_device_id = -1
 
         self.num_envs = cfg.env.num_envs
