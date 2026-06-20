@@ -3,3 +3,10 @@
 [stage-start] stage0_rebot_low_speed_reflex
 [stage-config] tasks/navigation/configs/dynamic_obstacles_transformer_stage0_delayed_static.yaml
 [stage-log] /root/sjtu-robotics/outputs/logs/navigation/dynamic_obstacles_multistage/stage0_rebot_low_speed_reflex.log
+[stage-done] stage0_rebot_low_speed_reflex run=06_20_17-18-57_ checkpoint=/root/sjtu-robotics/external/SEA-Nav-Code/training/legged_gym/logs/Go2_transformer_dynamic_avoidance/06_20_17-18-57_/model_250.pt
+
+[stage-start] stage1_rebot_low_speed_moving
+[stage-config] tasks/navigation/configs/dynamic_obstacles_transformer_stage1_avoidance.yaml
+[stage-init] /root/sjtu-robotics/external/SEA-Nav-Code/training/legged_gym/logs/Go2_transformer_dynamic_avoidance/06_20_17-18-57_/model_250.pt
+[stage-resume-iter] 250
+[stage-log] /root/sjtu-robotics/outputs/logs/navigation/dynamic_obstacles_multistage/stage1_rebot_low_speed_moving.log
